@@ -6,8 +6,12 @@ let tablas: string | null = null;
 
 /** Vacía todas las tablas de la BD de pruebas (nunca la de desarrollo). */
 export async function limpiarBd() {
-  if (!process.env.DATABASE_URL?.includes('5433')) {
-    throw new Error('Las pruebas solo pueden usar la BD postgres-test (puerto 5433).');
+  // Protección: el nombre de la BD debe terminar en _test (nunca se vacía la de desarrollo)
+  const nombreBd = new URL(process.env.DATABASE_URL ?? '').pathname.slice(1);
+  if (!nombreBd.endsWith('_test')) {
+    throw new Error(
+      `Las pruebas solo pueden usar una BD cuyo nombre termine en _test (recibí "${nombreBd}").`,
+    );
   }
   tablas ??= (
     await prisma.$queryRaw<{ tablename: string }[]>`

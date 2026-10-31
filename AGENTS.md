@@ -156,6 +156,8 @@ Una tarea está terminada cuando:
 ## 7. Restricciones para agentes de IA
 
 - Leer `CLAUDE.md`, este archivo y la sección relevante de `specs.md` **antes** de generar código.
+- En un equipo nuevo, ejecutar `node scripts/verificar-equipo.mjs` y seguir [docs/requisitos.md](docs/requisitos.md) antes de recomendar o instalar programas. Si algo no es viable por las especificaciones de la laptop, decirlo directamente y ofrecer la alternativa de esa guía.
+- No instalar programas ni cambiar configuración del sistema (WSL, BIOS, servicios) sin permiso de la persona.
 - Trabajar solo dentro del módulo de la tarea asignada; si se requiere tocar otro módulo, detenerse y señalarlo.
 - No inventar endpoints, campos ni enums fuera del contrato.
 - No ejecutar `prisma migrate reset`, `DROP`, ni borrar datos en la BD de desarrollo sin confirmación humana.

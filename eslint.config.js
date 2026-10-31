@@ -30,11 +30,11 @@ export default tseslint.config(
     },
   },
   {
-    files: ['backend/**/*.ts', '.claude/hooks/**/*.mjs', '*.js'],
+    files: ['backend/**/*.ts', '.claude/hooks/**/*.mjs', 'scripts/**/*.mjs', '*.js'],
     languageOptions: { globals: globals.node },
   },
   {
-    files: ['.claude/hooks/**/*.mjs'],
+    files: ['.claude/hooks/**/*.mjs', 'scripts/**/*.mjs'],
     rules: { 'no-console': 'off' },
   },
   {

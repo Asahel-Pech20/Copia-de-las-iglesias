@@ -1,3 +1,5 @@
+// Lee DATABASE_URL_TEST de backend/.env (sin Docker la BD de pruebas puede estar en otro puerto)
+import 'dotenv/config';
 import { defineConfig } from 'vitest/config';
 
 const BD_PRUEBAS = 'postgresql://iglesia:iglesia@localhost:5433/iglesia_test';

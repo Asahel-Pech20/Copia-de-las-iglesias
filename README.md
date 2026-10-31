@@ -10,11 +10,13 @@ Aplicación web para la administración interna de una iglesia: usuarios con rol
 
 ## Requisitos
 
+> **¿Tu laptop puede con esto?** Ejecuta `node scripts/verificar-equipo.mjs` y lee [docs/requisitos.md](docs/requisitos.md): qué necesitas según tu parte, cuánto consume cada programa y opciones sin Docker (PostgreSQL directo o GitHub Codespaces). El frontend se puede trabajar sin base de datos.
+
 | Herramienta | Versión | Instalación |
 |---|---|---|
 | Node.js | 22 o superior | <https://nodejs.org> |
 | pnpm | la fijada en `package.json` (`packageManager`) | `npm install -g pnpm` o `corepack enable` (como administrador) |
-| Docker Desktop | con `docker compose` | <https://www.docker.com/products/docker-desktop> |
+| Docker Desktop (opcional, ver requisitos) | con `docker compose` | <https://www.docker.com/products/docker-desktop> |
 
 ## Puesta en marcha
 
