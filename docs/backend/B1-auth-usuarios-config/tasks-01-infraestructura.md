@@ -12,9 +12,9 @@
 - **Fase:** 0 · **Tamaño:** S · **Depende de:** B1-01
 - `app.ts` (helmet, cors con `FRONTEND_URL` y `credentials`, JSON, cookie-parser, pino-http) y `server.ts`. `config/env.ts` valida variables con Zod y falla al arrancar si falta alguna.
 - **Criterios de aceptación**
-  - [ ] `GET /api/v1/health` → `{ data: { status: "ok" } }`.
-  - [ ] `pnpm --filter backend dev` recarga en caliente (tsx watch).
-  - [ ] Arranque falla con mensaje claro si falta `DATABASE_URL`.
+  - [x] `GET /api/v1/health` → `{ data: { status: "ok" } }`.
+  - [x] `pnpm --filter backend dev` recarga en caliente (tsx watch).
+  - [x] Arranque falla con mensaje claro si falta `DATABASE_URL`.
 
 ### B1-03 · Schema Prisma completo y migración inicial
 - **Fase:** 0 · **Tamaño:** L · **Depende de:** B1-01
