@@ -24,13 +24,13 @@
 - **Fase:** 0 · **Tamaño:** M · **Depende de:** F1-01
 - `lib/api.ts`: Axios con `baseURL = VITE_API_URL`, `withCredentials`, interceptor que agrega Bearer y, ante `TOKEN_EXPIRED`, llama una sola vez a `/auth/refresh` (cola de peticiones en espera) y reintenta; si falla, cierra sesión. Normaliza errores a `ErrorApi`. `queryClient` con `retry` solo en errores de red.
 - **Criterios de aceptación**
-  - [ ] Prueba: dos peticiones simultáneas con token expirado provocan **un** refresh.
+  - [x] Prueba: dos peticiones simultáneas con token expirado provocan **un** refresh.
 
 ### F1-05 · MSW y tipos comunes
 - **Fase:** 0 · **Tamaño:** S · **Depende de:** F1-04
 - MSW activado con `VITE_USE_MOCKS=true`. Estructura `mocks/handlers/<modulo>.ts` (cada dueño escribe los suyos) y `mocks/datos/`. Tipos `RespuestaLista<T>`, `RespuestaObjeto<T>`, `ErrorApi`, `Rol`, `Permiso`.
 - **Criterios de aceptación**
-  - [ ] Handler de ejemplo funcionando en navegador y en pruebas.
+  - [x] Handler de ejemplo funcionando en navegador y en pruebas.
 
 ### F1-06 · Componentes compartidos de datos
 - **Fase:** 1 · **Tamaño:** L · **Depende de:** F1-02
