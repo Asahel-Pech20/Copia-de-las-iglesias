@@ -12,3 +12,5 @@ Thumbs.db
 .vscode/
 .idea/
 .claude/settings.local.json
+backend/src/generated/
+backend/uploads-test/
