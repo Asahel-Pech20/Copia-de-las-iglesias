@@ -4,9 +4,9 @@
 - **Fase:** 0 · **Tamaño:** M · **Depende de:** —
 - Crear monorepo pnpm (`backend/`, `frontend/`), `.gitignore`, `.editorconfig`, Prettier y ESLint compartidos. `docker-compose.yml` con `postgres` (5432), `postgres-test` (5433) y `mailpit` (1025/8025).
 - **Criterios de aceptación**
-  - [ ] `docker compose up -d` levanta los tres servicios.
-  - [ ] `pnpm install` en la raíz instala ambos paquetes.
-  - [ ] Scripts raíz: `dev`, `test`, `lint`, `typecheck`.
+  - [ ] `docker compose up -d` levanta los tres servicios. *(archivo listo; falta probarlo en un equipo con Docker Desktop)*
+  - [x] `pnpm install` en la raíz instala ambos paquetes.
+  - [x] Scripts raíz: `dev`, `test`, `lint`, `typecheck`.
 
 ### B1-02 · Servidor Express base
 - **Fase:** 0 · **Tamaño:** S · **Depende de:** B1-01
