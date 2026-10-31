@@ -17,8 +17,8 @@
 - **Fase:** 0 · **Tamaño:** M · **Depende de:** F1-02
 - `AppLayout`: barra lateral 240 px (logo + nombre de la iglesia, menú), barra superior (usuario, rol, menú de cuenta, alternar tema), contenido. En móvil, menú en `Sheet`. `app/menu.ts` con entradas `{ etiqueta, ruta, icono, permiso }` filtradas por permisos.
 - **Criterios de aceptación**
-  - [ ] Funciona en 360 px sin scroll horizontal de página.
-  - [ ] Navegable con teclado; ítem activo resaltado.
+  - [x] Funciona en 360 px sin scroll horizontal de página.
+  - [x] Navegable con teclado; ítem activo resaltado.
 
 ### F1-04 · Cliente API y TanStack Query
 - **Fase:** 0 · **Tamaño:** M · **Depende de:** F1-01
@@ -36,12 +36,12 @@
 - **Fase:** 1 · **Tamaño:** L · **Depende de:** F1-02
 - `PageHeader`, `DataTable` (columnas tipadas, orden, selección opcional, vista tarjeta en móvil), `Paginacion`, `FiltrosBar`, `CampoBusqueda` (debounce 300 ms), `EmptyState`, `ErrorState`, `SkeletonTabla`, `StatCard`, `BadgeEstado`, `DateRangePicker`. Hook `useFiltrosURL()` que sincroniza filtros con la query string.
 - **Criterios de aceptación**
-  - [ ] Cada componente con prueba básica y ejemplo en `/_dev/ui`.
-  - [ ] Props documentadas con JSDoc.
+  - [x] Cada componente con prueba básica y ejemplo en `/_dev/ui`.
+  - [x] Props documentadas con JSDoc.
 
 ### F1-07 · Componentes de formulario y feedback
 - **Fase:** 1 · **Tamaño:** M · **Depende de:** F1-06
 - `FormField` (label, error con `aria-describedby`, hint), `SelectEnum`, `CampoFecha`, `CampoMoneda` (formato con la moneda configurada), `ConfirmDialog` (con campo de motivo opcional y obligatorio), toasts estándar. `lib/formato.ts` (`formatearFecha`, `formatearFechaHora`, `formatearMoneda`, etiquetas de enums en español).
 - **Criterios de aceptación**
-  - [ ] `ConfirmDialog` con motivo no permite confirmar con motivo vacío.
-  - [ ] Pruebas de `lib/formato.ts`.
+  - [x] `ConfirmDialog` con motivo no permite confirmar con motivo vacío.
+  - [x] Pruebas de `lib/formato.ts`.
