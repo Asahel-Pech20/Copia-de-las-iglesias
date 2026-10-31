@@ -15,6 +15,9 @@ const esquemaEnv = z.object({
   SMTP_PORT: z.coerce.number().int().positive().default(1025),
   SMTP_FROM: z.string().default('AppIglesia <no-reply@iglesia.local>'),
   UPLOAD_DIR: z.string().default('uploads'),
+  API_PUBLIC_URL: z.url().optional(),
+  // 12 según AGENTS.md §3; las pruebas usan un costo menor para ir rápido
+  BCRYPT_COST: z.coerce.number().int().min(4).max(15).default(12),
 });
 
 export type Env = z.infer<typeof esquemaEnv>;

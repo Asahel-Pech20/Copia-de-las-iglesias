@@ -39,8 +39,8 @@ export class AppError extends Error {
   static noEncontrado(message = 'El recurso solicitado no existe.') {
     return new AppError('NOT_FOUND', message, 404);
   }
-  static conflicto(message: string) {
-    return new AppError('CONFLICT', message, 409);
+  static conflicto(message: string, details?: DetalleError[]) {
+    return new AppError('CONFLICT', message, 409, details);
   }
   static reglaNegocio(message: string) {
     return new AppError('BUSINESS_RULE', message, 422);

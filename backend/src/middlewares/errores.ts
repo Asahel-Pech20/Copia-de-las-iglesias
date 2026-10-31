@@ -1,4 +1,5 @@
 import type { ErrorRequestHandler, RequestHandler } from 'express';
+import multer from 'multer';
 import { ZodError } from 'zod';
 import { env } from '../config/env';
 import { AppError, type CodigoError, type DetalleError } from '../lib/appError';
@@ -57,6 +58,16 @@ export const manejarErrores: ErrorRequestHandler = (err, req, res, _next) => {
       res.status(404).json(cuerpo('NOT_FOUND', 'El recurso solicitado no existe.'));
       return;
     }
+  }
+
+  // Subida de archivos (Multer): tamaño excedido o campo inesperado
+  if (err instanceof multer.MulterError) {
+    const message =
+      err.code === 'LIMIT_FILE_SIZE'
+        ? 'El archivo supera 2 MB.'
+        : 'El archivo enviado no es válido.';
+    res.status(400).json(cuerpo('VALIDATION_ERROR', message));
+    return;
   }
 
   // JSON mal formado en el body

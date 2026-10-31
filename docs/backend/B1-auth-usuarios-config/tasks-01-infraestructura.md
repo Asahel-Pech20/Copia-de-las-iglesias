@@ -4,7 +4,7 @@
 - **Fase:** 0 · **Tamaño:** M · **Depende de:** —
 - Crear monorepo pnpm (`backend/`, `frontend/`), `.gitignore`, `.editorconfig`, Prettier y ESLint compartidos. `docker-compose.yml` con `postgres` (5432), `postgres-test` (5433) y `mailpit` (1025/8025).
 - **Criterios de aceptación**
-  - [ ] `docker compose up -d` levanta los tres servicios. *(archivo listo; falta probarlo en un equipo con Docker Desktop)*
+  - [x] `docker compose up -d` levanta los tres servicios.
   - [x] `pnpm install` en la raíz instala ambos paquetes.
   - [x] Scripts raíz: `dev`, `test`, `lint`, `typecheck`.
 
@@ -20,15 +20,15 @@
 - **Fase:** 0 · **Tamaño:** L · **Depende de:** B1-01
 - Traducir `specs.md §6` a `schema.prisma` con enums, relaciones, índices y `@@map` a snake_case. Migración `init`. `lib/prisma.ts` con cliente singleton.
 - **Criterios de aceptación**
-  - [ ] `prisma migrate dev` crea todas las tablas sin errores.
-  - [ ] Revisado por B2, B3 y B4 (cada uno aprueba sus modelos en el PR).
-  - [ ] `prisma studio` muestra todos los modelos.
+  - [x] `prisma migrate dev` crea todas las tablas sin errores.
+  - [ ] Revisado por B2, B3 y B4 (cada uno aprueba sus modelos en el PR). *(pendiente: revisión de compañeros en el PR)*
+  - [ ] `prisma studio` muestra todos los modelos. *(no verificado; correr `pnpm --filter backend db:studio`)*
 
 ### B1-04 · Seed mínimo
 - **Fase:** 0 · **Tamaño:** S · **Depende de:** B1-03
 - `prisma/seed.ts` crea `ConfiguracionIglesia` (id 1) y un usuario por rol (contraseñas desde variables `SEED_*` en `.env.example`). B2 extiende el seed con datos de dominio (B2-12).
 - **Criterios de aceptación**
-  - [ ] `pnpm --filter backend db:seed` es idempotente (usa `upsert`).
+  - [x] `pnpm --filter backend db:seed` es idempotente (usa `upsert`).
 
 ### B1-05 · Middlewares comunes y formato de respuesta
 - **Fase:** 0 · **Tamaño:** M · **Depende de:** B1-02
@@ -42,12 +42,12 @@
 - **Fase:** 0 · **Tamaño:** S · **Depende de:** B1-05
 - `modules/_plantilla/` con routes/controller/service/schemas/test de ejemplo. Configuración Vitest que usa `DATABASE_URL_TEST`, aplica migraciones y limpia tablas entre suites. Helper `loginComo(rol)` que devuelve un token para pruebas.
 - **Criterios de aceptación**
-  - [ ] `pnpm --filter backend test` corre la prueba de ejemplo en verde.
-  - [ ] Guía corta en `backend/README.md` de cómo crear un módulo.
+  - [x] `pnpm --filter backend test` corre la prueba de ejemplo en verde.
+  - [x] Guía corta en `backend/README.md` de cómo crear un módulo.
 
 ### B1-07 · CI y documentación OpenAPI
 - **Fase:** 1 · **Tamaño:** M · **Depende de:** B1-06
 - GitHub Actions: install, lint, typecheck, tests (con servicio Postgres). Swagger UI en `/api/docs` alimentado por `backend/openapi.yaml` (cada dueño agrega sus rutas).
 - **Criterios de aceptación**
-  - [ ] Un PR con error de lint falla en CI.
-  - [ ] `/api/docs` muestra health y auth.
+  - [ ] Un PR con error de lint falla en CI. *(workflow listo; se verifica al abrir el primer PR en GitHub)*
+  - [x] `/api/docs` muestra health y auth.

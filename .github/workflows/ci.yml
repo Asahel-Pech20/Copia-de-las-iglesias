@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    services:
+      # Igual que postgres-test de docker-compose.yml
+      postgres-test:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: iglesia
+          POSTGRES_PASSWORD: iglesia
+          POSTGRES_DB: iglesia_test
+        ports: ['5433:5432']
+        options: >-
+          --health-cmd "pg_isready -U iglesia -d iglesia_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Activar pnpm (versión de packageManager)
+        run: corepack enable
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm lint
+      - name: Formato
+        run: pnpm format:check
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Pruebas (backend usa postgres-test; las migraciones se aplican solas)
+        run: pnpm test

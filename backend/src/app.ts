@@ -1,13 +1,16 @@
 import './config/zod';
+import path from 'node:path';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import { pinoHttp } from 'pino-http';
 import { env } from './config/env';
+import { montarDocumentacion } from './docs';
 import { logger } from './lib/logger';
 import { manejarErrores, noEncontrado } from './middlewares/errores';
-import { apiRouter } from './routes';
+import { RUTA_UPLOADS } from './modules/configuracion/configuracion.service';
+import { crearApiRouter } from './routes';
 
 export function crearApp() {
   const app = express();
@@ -19,7 +22,18 @@ export function crearApp() {
   app.use(cookieParser());
   app.use(pinoHttp({ logger }));
 
-  app.use('/api/v1', apiRouter);
+  // Logotipos: el frontend (otro origen) los muestra en <img>
+  app.use(
+    RUTA_UPLOADS,
+    (_req, res, next) => {
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      next();
+    },
+    express.static(path.resolve(env.UPLOAD_DIR), { index: false, dotfiles: 'deny' }),
+  );
+
+  montarDocumentacion(app);
+  app.use('/api/v1', crearApiRouter());
 
   app.use(noEncontrado);
   app.use(manejarErrores);
