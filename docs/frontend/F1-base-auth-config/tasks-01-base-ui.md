@@ -10,8 +10,8 @@
 - **Fase:** 0 · **Tamaño:** M · **Depende de:** F1-01
 - Variables CSS de `AGENTS.md §4` (claro/oscuro), fuente Inter, `tailwind.config` con los tokens, instalación de shadcn/ui (Button, Input, Select, Dialog, Sheet, DropdownMenu, Tabs, Toast/Sonner, Checkbox, Switch, Popover, Calendar, Table, Card, Badge, Skeleton, Tooltip).
 - **Criterios de aceptación**
-  - [ ] Página `/_dev/ui` (solo en desarrollo) que muestra todos los componentes en claro y oscuro.
-  - [ ] Contraste AA verificado en los pares texto/fondo principales.
+  - [x] Página `/_dev/ui` (solo en desarrollo) que muestra todos los componentes en claro y oscuro.
+  - [x] Contraste AA verificado en los pares texto/fondo principales.
 
 ### F1-03 · Layout principal
 - **Fase:** 0 · **Tamaño:** M · **Depende de:** F1-02

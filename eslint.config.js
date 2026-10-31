@@ -47,6 +47,11 @@ export default tseslint.config(
     },
   },
   {
+    // Los componentes de shadcn/ui exportan también sus variantes de estilo
+    files: ['frontend/src/components/ui/**/*.tsx'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
+  {
     files: ['frontend/vite.config.ts'],
     languageOptions: { globals: globals.node },
   },
