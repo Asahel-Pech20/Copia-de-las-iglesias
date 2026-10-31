@@ -4,7 +4,7 @@
 - **Fase:** 0 · **Tamaño:** S · **Depende de:** B1-01
 - React + Vite + TS strict, alias `@/`, ESLint/Prettier del monorepo, Vitest + Testing Library, `.env.example`.
 - **Criterios de aceptación**
-  - [ ] `pnpm --filter frontend dev` abre en `:5173`; `test` y `typecheck` pasan.
+  - [x] `pnpm --filter frontend dev` abre en `:5173`; `test` y `typecheck` pasan.
 
 ### F1-02 · Tokens de diseño, Tailwind y shadcn/ui
 - **Fase:** 0 · **Tamaño:** M · **Depende de:** F1-01
