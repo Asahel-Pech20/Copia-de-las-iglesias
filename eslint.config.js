@@ -48,7 +48,7 @@ export default tseslint.config(
   },
   {
     // Los componentes de shadcn/ui exportan también sus variantes de estilo
-    files: ['frontend/src/components/ui/**/*.tsx'],
+    files: ['frontend/src/components/ui/**/*.tsx', 'frontend/src/test/**/*.tsx'],
     rules: { 'react-refresh/only-export-components': 'off' },
   },
   {
