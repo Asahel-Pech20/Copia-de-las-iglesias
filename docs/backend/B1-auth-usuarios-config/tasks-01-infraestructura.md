@@ -34,9 +34,9 @@
 - **Fase:** 0 · **Tamaño:** M · **Depende de:** B1-02
 - `AppError(code, message, status, details?)`, `errores.ts` (traduce `ZodError`, errores Prisma P2002→409 y P2025→404), `validar({ body, query, params })`, helpers `ok()`, `okLista()`, `paginar(query)`.
 - **Criterios de aceptación**
-  - [ ] Respuestas y errores exactamente como `specs.md §7.1`.
-  - [ ] Errores 500 no filtran stack en producción.
-  - [ ] Pruebas unitarias de `errores.ts` y `paginar`.
+  - [x] Respuestas y errores exactamente como `specs.md §7.1`.
+  - [x] Errores 500 no filtran stack en producción.
+  - [x] Pruebas unitarias de `errores.ts` y `paginar`.
 
 ### B1-06 · Plantilla de módulo y entorno de pruebas
 - **Fase:** 0 · **Tamaño:** S · **Depende de:** B1-05

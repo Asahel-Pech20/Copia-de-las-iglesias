@@ -1,3 +1,4 @@
+import './config/zod';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
@@ -5,6 +6,7 @@ import helmet from 'helmet';
 import { pinoHttp } from 'pino-http';
 import { env } from './config/env';
 import { logger } from './lib/logger';
+import { manejarErrores, noEncontrado } from './middlewares/errores';
 import { apiRouter } from './routes';
 
 export function crearApp() {
@@ -18,6 +20,9 @@ export function crearApp() {
   app.use(pinoHttp({ logger }));
 
   app.use('/api/v1', apiRouter);
+
+  app.use(noEncontrado);
+  app.use(manejarErrores);
 
   return app;
 }
