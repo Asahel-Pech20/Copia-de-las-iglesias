@@ -137,6 +137,13 @@ Leyenda: **C** crear · **L** leer · **E** editar · **D** desactivar/cancelar/
 - Formato de permiso: `modulo:accion` (ej. `donaciones:crear`, `miembros:leer`).
 - "Donaciones D" = **anular** (nunca borrar).
 
+**Nombres de permisos** (B1-08, `config/permisos.ts`):
+- Por módulo `usuarios`, `miembros`, `ministerios`, `eventos`, `anuncios`, `donaciones`: `:crear`, `:leer`, `:editar`, `:eliminar` (D = desactivar / cancelar / eliminar / anular según el módulo).
+- `configuracion:leer`, `configuracion:editar` · `asistencia:crear`, `asistencia:leer`, `asistencia:editar` · `dashboard:leer` · `usuarios:opciones` (ADMIN, PASTOR).
+- Reportes: `reportes:generales` (miembros / asistencia / ministerios) y `reportes:ingresos`.
+- Variantes *(propio)* del COORDINADOR con sufijo `-propio`: `ministerios:editar-propio`, `eventos:crear-propio`, `eventos:editar-propio`, `eventos:eliminar-propio`, `asistencia:crear-propio`, `asistencia:leer-propio`, `asistencia:editar-propio`, `reportes:generales-propio`. El endpoint verifica además `esCoordinadorDe(usuarioId, ministerioId)`.
+- Ver ingresos del dashboard = tener `donaciones:leer`.
+
 ---
 
 ## 4. Stack tecnológico

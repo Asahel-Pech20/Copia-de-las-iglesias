@@ -4,8 +4,8 @@
 - **RF:** RF-01.5, RF-01.6 · **Fase:** 1 · **Tamaño:** S · **Depende de:** B1-05
 - `config/permisos.ts`: tipo `Permiso` (`'miembros:leer' | ...`) y mapa `Rol → Permiso[]` según `specs.md §3`. Función `tienePermiso(rol, permiso)`.
 - **Criterios de aceptación**
-  - [ ] Prueba unitaria que recorre la matriz completa de `specs.md §3`.
-  - [ ] Lista de permisos exportada para que F1 la copie.
+  - [x] Prueba unitaria que recorre la matriz completa de `specs.md §3`.
+  - [x] Lista de permisos exportada para que F1 la copie.
 
 ### B1-09 · Login y middleware `autenticar`
 - **RF:** RF-01.2, RF-01.3 · **Fase:** 1 · **Tamaño:** M · **Depende de:** B1-08
