@@ -66,19 +66,21 @@ Tareas: `docs/README.md` → `docs/{backend,frontend}/<subseccion>/plan.md` → 
 | 2026-10-30 | Cartelera pública (`/public/cartelera`) de solo lectura para mostrar anuncios y eventos a los miembros. |
 | 2026-10-31 | TypeScript fijado en `~6.0` (typescript-eslint aún no soporta TS 7). pnpm fijado en `packageManager`. `@types/node` 22 (Node del spec). |
 | 2026-10-31 | Arnés de Claude Code en `.claude/` (permisos, hooks, `/tarea`). Ver `docs/arnes.md`. |
+| 2026-10-31 | Prisma 7 con `prisma.config.ts` y adaptador `pg`; cliente generado en `backend/src/generated` (git-ignored). |
+| 2026-10-31 | `Usuario.passwordHash` opcional: el ADMIN crea usuarios sin contraseña y reciben invitación (48 h). |
+| 2026-10-31 | Formato de respuestas de auth y listas permitidas de moneda/zona horaria definidas por B1 (ver `specs.md §7.2`). |
+| 2026-10-31 | Permisos del coordinador con sufijo `-propio` (`specs.md §3`); se usan con `autorizarAlguno` + `esCoordinadorDe`. |
 
 ## Estado actual
-- **Fase 0 — Arranque**.
-- ✅ **B1-01 Monorepo y Docker** (rama `feat/B1-01-monorepo-docker`): workspaces pnpm, ESLint/Prettier/EditorConfig/tsconfig compartidos, `docker-compose.yml`, `backend/.env.example`, arnés. `pnpm install`, `lint`, `typecheck`, `test` y `dev` verificados. **Pendiente:** probar `docker compose up -d` en un equipo con Docker Desktop.
-- `backend/src/index.ts` y `frontend/src/index.ts` son provisionales y sus scripts `dev` solo imprimen un aviso. B1-02 y F1-01 los reemplazan.
+- **B1 y F1 completos** (rama `feat/B1-F1-base`, sin push). Backend: 152 pruebas; frontend: 85. Probado de punta a punta: login real, sesión al recargar, invitación por Mailpit, logo servido desde el backend, Swagger.
+- Criterios de B1 aún abiertos: revisión del schema por B2/B3/B4 en el PR, `prisma studio` sin verificar, CI sin probar hasta el primer PR en GitHub.
+- **Ya desbloqueado para el equipo:** `autenticar`, `autorizar`, `autorizarAlguno`, `esCoordinadorDe` (`middlewares/auth.ts`), `validar`, `AppError`, paginación, plantilla `modules/_plantilla/`, `loginComo(rol)` para pruebas, componentes de `components/comunes` y MSW. Guía: `backend/README.md`.
+- Siguiente: Nataly (B2-01 miembros), Genaro (B3-01 eventos) y Oscar (B4-01 donaciones) pueden empezar.
 
-### Seguimiento — paso 2: B1-02 · Servidor Express base
-- **Dueño:** Santiago (B1). **Depende de:** B1-01 ✅. **Ejecutar con:** `/tarea B1-02` en la rama `feat/B1-02-servidor-express`.
-- **A hacer:** `backend/src/app.ts` (helmet, cors con `FRONTEND_URL` + `credentials`, JSON, cookie-parser, pino-http), `server.ts` y `config/env.ts` (Zod; falla al arrancar si falta una variable). Cambiar el script `dev` del backend a `tsx watch src/server.ts` y borrar `src/index.ts`.
-- **Criterios:** `GET /api/v1/health` → `{ data: { status: "ok" } }` · recarga en caliente · error claro sin `DATABASE_URL`.
-- **Dependencias nuevas** (todas en `specs.md §4`): `express@5`, `helmet`, `cors`, `cookie-parser`, `pino`, `pino-http`, `zod`, `dotenv`; dev: `tsx`, `@types/express`, `@types/cors`, `@types/cookie-parser`. `pnpm add` pide confirmación (arnés).
-- **En paralelo:** F1-01 (Vite + React) también depende solo de B1-01.
-- **Desbloquea a compañeros:** B1-03 (schema) y B1-05 (middlewares) habilitan a B2/B3/B4. Nataly (B2-01) necesita B1-05 y B1-11.
+### Cómo levantar todo
+1. `docker compose up -d` · 2. `cp backend/.env.example backend/.env` (una vez) · 3. `pnpm install` · 4. `pnpm --filter backend db:deploy` y `db:seed` · 5. `pnpm dev`.
+- El frontend usa MSW por defecto en desarrollo; para usar el backend real: `frontend/.env` con `VITE_USE_MOCKS=false`.
+- Usuarios: `<rol>@iglesia.local` / `SEED_PASSWORD` (backend real) o `Iglesia123` (mocks, `frontend/src/mocks/datos/b1.ts`).
 
 ## Pendientes / preguntas abiertas
 - Confirmar moneda y zona horaria de la iglesia real.

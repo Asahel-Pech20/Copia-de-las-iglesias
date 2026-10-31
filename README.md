@@ -41,8 +41,8 @@ Mailpit (correos de prueba): <http://localhost:8025>
 ```
 .
 ├── .claude/              # arnés de Claude Code (permisos, hooks, comando /tarea)
-├── backend/              # API Express + Prisma (se construye desde B1-02)
-├── frontend/             # React + Vite (se construye desde F1-01)
+├── backend/              # API Express + Prisma (ver backend/README.md)
+├── frontend/             # React + Vite (MSW en desarrollo)
 ├── docs/                 # planes y tareas por subsección
 ├── docker-compose.yml    # servicios de desarrollo
 ├── eslint.config.js      # ESLint compartido

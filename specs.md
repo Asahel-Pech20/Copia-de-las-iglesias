@@ -248,7 +248,7 @@ model Usuario {
   id String @id @default(uuid())
   nombre String
   email String @unique
-  passwordHash String
+  passwordHash String?   // null mientras el usuario no configura su contraseña (invitación, B1-14)
   rol Rol
   activo Boolean @default(true)
   ultimoAcceso DateTime?
@@ -352,12 +352,19 @@ model HorarioReunion { id, nombre, diaSemana Int (0=domingo..6), horaInicio "HH:
 | GET | `/auth/me` | autenticado → usuario + `permisos[]` |
 | PATCH | `/auth/me/password` | autenticado |
 
+Respuestas de auth (B1):
+- `POST /auth/login` → `{ data: { accessToken, usuario, permisos[] } }` + cookie `refreshToken` (httpOnly).
+- `POST /auth/refresh` → `{ data: { accessToken } }` y rota la cookie. `GET /auth/me` → `{ data: { usuario, permisos[] } }`.
+- `usuario` = `{ id, nombre, email, rol, activo, ultimoAcceso, createdAt, updatedAt }` (nunca `passwordHash`).
+- `PATCH /auth/me/password` body `{ passwordActual, passwordNueva }`; `POST /auth/reset-password` body `{ token, password }` (también fija la contraseña inicial de la invitación). Errores de campo en `details[].campo`.
+
 **Usuarios** (B1) — solo ADMIN
 `GET /usuarios` · `POST /usuarios` · `GET /usuarios/:id` · `PATCH /usuarios/:id` · `PATCH /usuarios/:id/estado` · `POST /usuarios/:id/reenviar-invitacion`
+`POST /usuarios` body `{ nombre, email, rol, password? }`: sin `password` se envía un correo de invitación (enlace de 48 h).
 `GET /usuarios/opciones?rol=` → `[{ id, nombre, rol }]` solo activos (ADMIN y PASTOR; para elegir coordinadores)
 
 **Configuración** (B1)
-`GET /configuracion` (público) · `PUT /configuracion` (ADMIN) · `POST /configuracion/logo` (ADMIN, multipart, png/jpg/svg/webp ≤ 2 MB)
+`GET /configuracion` (público; `logoUrl` es URL absoluta) · `PUT /configuracion` (ADMIN) · `POST /configuracion/logo` (ADMIN, multipart, png/jpg/svg/webp ≤ 2 MB)
 `GET /configuracion/horarios` (público) · `POST|PATCH|DELETE /configuracion/horarios[/:id]` (ADMIN)
 
 **Miembros** (B2)
@@ -474,6 +481,8 @@ SMTP_HOST=localhost
 SMTP_PORT=1025
 SMTP_FROM="AppIglesia <no-reply@iglesia.local>"
 UPLOAD_DIR=uploads
+API_PUBLIC_URL=http://localhost:3000
+SEED_PASSWORD=Iglesia123
 ```
 
 `frontend/.env.example`
