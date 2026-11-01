@@ -7,7 +7,8 @@ on:
 
 jobs:
   verificar:
-    runs-on: ubuntu-latest
+    # Versión fija: ubuntu-latest migra a Ubuntu 26 y podría cambiar herramientas sin aviso
+    runs-on: ubuntu-24.04
     services:
       # Igual que postgres-test de docker-compose.yml
       postgres-test:
@@ -21,10 +22,12 @@ jobs:
           --health-cmd "pg_isready -U iglesia -d iglesia_test"
           --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
+          # pnpm se activa después con corepack: sin caché automática para que no falle este paso
+          package-manager-cache: false
       - name: Activar pnpm (versión de packageManager)
         run: corepack enable
       - name: Instalar dependencias

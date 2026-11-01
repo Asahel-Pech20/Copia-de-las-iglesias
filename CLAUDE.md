@@ -70,11 +70,12 @@ Tareas: `docs/README.md` → `docs/{backend,frontend}/<subseccion>/plan.md` → 
 | 2026-10-31 | Prisma 7 con `prisma.config.ts` y adaptador `pg`; cliente generado en `backend/src/generated` (git-ignored). |
 | 2026-10-31 | `Usuario.passwordHash` opcional: el ADMIN crea usuarios sin contraseña y reciben invitación (48 h). |
 | 2026-10-31 | Formato de respuestas de auth y listas permitidas de moneda/zona horaria definidas por B1 (ver `specs.md §7.2`). |
+| 2026-10-31 | CI con `actions/checkout@v7` y `setup-node@v7` (Node 24) en `ubuntu-24.04` fijo (aviso de Oscar). |
 | 2026-10-31 | Permisos del coordinador con sufijo `-propio` (`specs.md §3`); se usan con `autorizarAlguno` + `esCoordinadorDe`. |
 
 ## Estado actual
-- **B1 y F1 completos** (rama `feat/B1-F1-base`, sin push). Backend: 152 pruebas; frontend: 85. Probado de punta a punta: login real, sesión al recargar, invitación por Mailpit, logo servido desde el backend, Swagger.
-- Criterios de B1 aún abiertos: revisión del schema por B2/B3/B4 en el PR, `prisma studio` sin verificar, CI sin probar hasta el primer PR en GitHub.
+- **B1 y F1 completos** (rama `feat/B1-F1-base`, PR [Surer46/IglesyApp#1](https://github.com/Surer46/IglesyApp/pull/1) hacia `develop`, CI en verde; falta aprobación). Backend: 152 pruebas; frontend: 85. Probado de punta a punta: login real, sesión al recargar, invitación por Mailpit, logo servido desde el backend, Swagger.
+- Criterios de B1 aún abiertos: revisión del schema por B2/B3/B4 en el PR, `prisma studio` sin verificar.
 - **Ya desbloqueado para el equipo:** `autenticar`, `autorizar`, `autorizarAlguno`, `esCoordinadorDe` (`middlewares/auth.ts`), `validar`, `AppError`, paginación, plantilla `modules/_plantilla/`, `loginComo(rol)` para pruebas, componentes de `components/comunes` y MSW. Guía: `backend/README.md`.
 - Siguiente: Nataly (B2-01 miembros), Genaro (B3-01 eventos) y Oscar (B4-01 donaciones) pueden empezar.
 
