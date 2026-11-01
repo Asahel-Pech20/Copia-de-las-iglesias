@@ -49,5 +49,5 @@
 - **Fase:** 1 · **Tamaño:** M · **Depende de:** B1-06
 - GitHub Actions: install, lint, typecheck, tests (con servicio Postgres). Swagger UI en `/api/docs` alimentado por `backend/openapi.yaml` (cada dueño agrega sus rutas).
 - **Criterios de aceptación**
-  - [ ] Un PR con error de lint falla en CI. *(workflow listo; se verifica al abrir el primer PR en GitHub)*
+  - [ ] Un PR con error de lint falla en CI. *(CI corre y pasa en el PR #1; falta probar un PR con error de lint)*
   - [x] `/api/docs` muestra health y auth.
