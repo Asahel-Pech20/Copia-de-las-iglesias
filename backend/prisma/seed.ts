@@ -3,6 +3,7 @@
 import { ROLES } from '../src/config/permisos';
 import { prisma } from '../src/lib/prisma';
 import { hashPassword } from '../src/lib/seguridad';
+import { seedB2 } from './seed-b2';
 
 const NOMBRES: Record<(typeof ROLES)[number], string> = {
   ADMIN: 'Administrador General',
@@ -33,7 +34,12 @@ async function main() {
     });
   }
 
-  console.warn(`Seed listo: configuración + ${ROLES.length} usuarios (<rol>@iglesia.local).`);
+  // B2-12: miembros, ministerios, vínculos y coordinadores
+  const { miembroIds, ministerios } = await seedB2();
+
+  console.warn(
+    `Seed listo: configuración, ${ROLES.length} usuarios (<rol>@iglesia.local), ${miembroIds.length} miembros y ${ministerios.size} ministerios.`,
+  );
 }
 
 main()

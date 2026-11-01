@@ -1,6 +1,8 @@
 import { type Router as TipoRouter, Router } from 'express';
 import { crearAuthRouter } from './modules/auth/auth.routes';
 import { configuracionRouter } from './modules/configuracion/configuracion.routes';
+import { miembrosRouter } from './modules/miembros/miembros.routes';
+import { ministeriosRouter } from './modules/ministerios/ministerios.routes';
 import { usuariosRouter } from './modules/usuarios/usuarios.routes';
 
 export interface ModuloApi {
@@ -17,6 +19,8 @@ export function crearModulos(): ModuloApi[] {
     { prefijo: '/auth', router: crearAuthRouter() },
     { prefijo: '/usuarios', router: usuariosRouter },
     { prefijo: '/configuracion', router: configuracionRouter },
+    { prefijo: '/miembros', router: miembrosRouter },
+    { prefijo: '/ministerios', router: ministeriosRouter },
   ];
 }
 

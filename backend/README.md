@@ -17,6 +17,39 @@ pnpm --filter backend dev                # http://localhost:3000/api/v1
 - Swagger: <http://localhost:3000/api/docs> · Correos (recuperación, invitaciones): <http://localhost:8025>.
 - Pruebas: `pnpm --filter backend test` (usan `postgres-test` en el puerto 5433 y la vacían antes de cada prueba).
 
+## Datos de prueba de miembros y ministerios (B2-12)
+
+`db:seed` también ejecuta `prisma/seed-b2.ts`:
+
+- **60 miembros** (6 inactivos, con fecha y motivo de baja) con nombres, teléfonos, correos y direcciones realistas.
+- **6 ministerios**: Música, Jóvenes, Niños, Enseñanza, Servicio y Damas.
+- **Vínculos**: cada miembro activo pertenece a 0–2 ministerios.
+- **Coordinadores**: `coordinador@iglesia.local` coordina Jóvenes y Música; `pastor@iglesia.local`, Enseñanza.
+
+Es **reproducible e idempotente**: usa un generador pseudoaleatorio con semilla fija (sin dependencias nuevas) y los ids de los miembros se derivan de esa semilla, así que volver a correrlo actualiza los mismos registros en lugar de duplicarlos.
+
+B3/B4: para agregar eventos, asistencias o donaciones encima, importen las funciones exportadas:
+
+```ts
+import { seedMiembros, seedMinisterios } from './seed-b2';
+const miembroIds = await seedMiembros(); // ids en orden; los 6 últimos son inactivos
+const ministerios = await seedMinisterios(); // Map nombre → id
+```
+
+## Servicios de B2 para otros módulos
+
+| Función | Uso |
+|---|---|
+| `miembrosService.contarActivos()` | Dashboard (B4) |
+| `miembrosService.obtenerActivos({ ministerioId?, ids? })` | Asistencia esperada, responsables (B3) |
+| `miembrosService.existeActivo(id)` | Validar responsables, asistencia, donaciones (B3, B4) |
+| `miembrosService.altasPorMes(desde, hasta)` | Gráfica `altasMiembrosPorMes` (B4) |
+| `miembrosService.listadoParaReporte({ estado })` | Reporte general de miembros (B4) |
+| `ministeriosService.miembrosDe(ministerioId)` | Asistencia esperada, reporte por ministerio (B3, B4) |
+| `ministeriosService.ministeriosCoordinadosPor(usuarioId)` | Permisos "-propio" del coordinador (B3) |
+| `ministeriosService.contarActivos()` | Dashboard `totalMinisterios` (B4) |
+| `ministeriosService.participacionPorMinisterio()` | Gráfica `miembrosPorMinisterio` y RF-09.3 (B4) |
+
 ## Crear un módulo nuevo
 
 1. Copia `src/modules/_plantilla/` a `src/modules/<modulo>/` y renombra los archivos: `<modulo>.routes.ts`, `.controller.ts`, `.service.ts`, `.schemas.ts`, `.test.ts`.

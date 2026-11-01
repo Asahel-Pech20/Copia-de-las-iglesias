@@ -1,6 +1,16 @@
 import type { ConfiguracionIglesia, HorarioReunion } from '@/types/configuracion';
+import type { Miembro } from '@/types/miembros';
 import type { Usuario } from '@/types/usuarios';
 import { configuracionInicial, horariosIniciales, usuariosIniciales } from './datos/b1';
+import {
+  type CoordinacionMock,
+  coordinacionesIniciales,
+  type MinisterioMock,
+  miembrosIniciales,
+  ministeriosIniciales,
+  type VinculoMock,
+  vinculosIniciales,
+} from './datos/b2';
 
 // "Base de datos" en memoria de los mocks. Cada dueño agrega aquí sus colecciones (B2–B4).
 export const db = {
@@ -9,11 +19,20 @@ export const db = {
   horarios: horariosIniciales(),
   /** Tokens de restablecimiento válidos → id de usuario */
   tokensReset: new Map<string, string>([['token-valido', 'u-pastor']]),
+  // F2: miembros, ministerios y sus relaciones
+  miembros: miembrosIniciales(),
+  ministerios: ministeriosIniciales(),
+  vinculos: vinculosIniciales(),
+  coordinaciones: coordinacionesIniciales(),
 } satisfies {
   usuarios: Usuario[];
   configuracion: ConfiguracionIglesia;
   horarios: HorarioReunion[];
   tokensReset: Map<string, string>;
+  miembros: Miembro[];
+  ministerios: MinisterioMock[];
+  vinculos: VinculoMock[];
+  coordinaciones: CoordinacionMock[];
 };
 
 /** Restaura los datos iniciales (se llama entre pruebas). */
@@ -22,9 +41,12 @@ export function reiniciarDb() {
   db.configuracion = configuracionInicial();
   db.horarios = horariosIniciales();
   db.tokensReset = new Map([['token-valido', 'u-pastor']]);
+  db.miembros = miembrosIniciales();
+  db.ministerios = ministeriosIniciales();
+  db.vinculos = vinculosIniciales();
+  db.coordinaciones = coordinacionesIniciales();
   sesionMock.cerrar();
 }
-
 // Sesión simulada: en el navegador sobrevive a recargas (como la cookie de refresh real)
 const CLAVE_SESION = 'msw:sesion';
 let sesionEnMemoria: string | null = null;
