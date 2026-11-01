@@ -2,6 +2,8 @@ import { http, HttpResponse } from 'msw';
 import { ruta } from '../utils';
 import { authHandlers } from './auth';
 import { configuracionHandlers } from './configuracion';
+import { miembrosHandlers } from './miembros';
+import { ministeriosHandlers } from './ministerios';
 import { usuariosHandlers } from './usuarios';
 
 // Cada dueño agrega aquí los handlers de su módulo (F2: miembros/ministerios, F3: eventos…, F4: donaciones…)
@@ -10,4 +12,6 @@ export const handlers = [
   ...authHandlers,
   ...usuariosHandlers,
   ...configuracionHandlers,
+  ...miembrosHandlers,
+  ...ministeriosHandlers,
 ];

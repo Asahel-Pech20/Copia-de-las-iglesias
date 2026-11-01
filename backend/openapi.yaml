@@ -12,6 +12,8 @@ tags:
   - name: Auth
   - name: Usuarios
   - name: Configuración
+  - name: Miembros
+  - name: Ministerios
 
 components:
   securitySchemes:
@@ -114,6 +116,63 @@ components:
         horaFin: { type: string, nullable: true, example: '12:00' }
         lugar: { type: string, nullable: true }
         activo: { type: boolean }
+    MiembroEntrada:
+      type: object
+      properties:
+        nombre: { type: string, maxLength: 80 }
+        apellidos: { type: string, maxLength: 120 }
+        fechaIngreso: { type: string, format: date, description: No futura }
+        telefono:
+          {
+            type: string,
+            nullable: true,
+            description: '7–15 dígitos; se aceptan +, espacios y guiones (se guarda sin separadores)',
+          }
+        email: { type: string, format: email, nullable: true }
+        fechaNacimiento: { type: string, format: date, nullable: true }
+        direccion: { type: string, nullable: true }
+        notas: { type: string, nullable: true }
+    Miembro:
+      allOf:
+        - { $ref: '#/components/schemas/MiembroEntrada' }
+        - type: object
+          properties:
+            id: { type: string, format: uuid }
+            activo: { type: boolean }
+            fechaBaja: { type: string, format: date, nullable: true }
+            motivoBaja: { type: string, nullable: true }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+    MinisterioResumen:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        nombre: { type: string }
+    Ministerio:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        nombre: { type: string }
+        descripcion: { type: string, nullable: true }
+        activo: { type: boolean }
+        totalIntegrantes: { type: integer, description: Vínculos activos }
+        coordinadores:
+          type: array
+          items: { type: object, properties: { id: { type: string }, nombre: { type: string } } }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Integrante:
+      type: object
+      properties:
+        id: { type: string, format: uuid, description: Id del miembro }
+        nombre: { type: string }
+        apellidos: { type: string }
+        telefono: { type: string, nullable: true }
+        email: { type: string, nullable: true }
+        miembroActivo: { type: boolean }
+        activo: { type: boolean, description: Vínculo activo }
+        fechaUnion: { type: string, format: date-time }
+        fechaSalida: { type: string, format: date-time, nullable: true }
   responses:
     SinContenido: { description: Sin contenido }
     Validacion:
@@ -627,4 +686,230 @@ paths:
       summary: Eliminar horario (ADMIN)
       responses:
         '204': { $ref: '#/components/responses/SinContenido' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+
+  /miembros:
+    get:
+      tags: [Miembros]
+      summary: Listado paginado (miembros:leer)
+      description: Búsqueda por nombre y apellidos sin distinguir mayúsculas ni acentos. Orden por defecto `apellidos:asc`.
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Q' }
+        - { $ref: '#/components/parameters/Orden' }
+        - name: estado
+          in: query
+          schema: { type: string, enum: [activo, inactivo, todos], default: activo }
+        - { name: ministerioId, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      allOf:
+                        - { $ref: '#/components/schemas/Miembro' }
+                        - type: object
+                          properties:
+                            ministerios:
+                              type: array
+                              items: { $ref: '#/components/schemas/MinisterioResumen' }
+                            totalMinisterios: { type: integer }
+                  meta: { $ref: '#/components/schemas/Meta' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+    post:
+      tags: [Miembros]
+      summary: Registrar miembro (miembros:crear)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - { $ref: '#/components/schemas/MiembroEntrada' }
+                - { required: [nombre, apellidos, fechaIngreso] }
+      responses:
+        '201':
+          description: Creado. Si ya existe alguien con el mismo nombre y apellidos, `meta` lo advierte.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Miembro' }
+                  meta:
+                    type: object
+                    properties:
+                      posibleDuplicado: { type: boolean }
+                      duplicadoId: { type: string, format: uuid }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+  /miembros/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Miembros]
+      summary: Detalle con ministerios (actuales e históricos)
+      responses:
+        '200': { description: OK }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+    patch:
+      tags: [Miembros]
+      summary: Editar datos personales (miembros:editar); `activo` no se acepta aquí
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/MiembroEntrada' } } }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+  /miembros/{id}/estado:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    patch:
+      tags: [Miembros]
+      summary: Desactivar / reactivar (miembros:eliminar)
+      description: Al desactivar guarda fecha y motivo de baja y cierra sus vínculos de ministerio. Al reactivar los vínculos no se restauran.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [activo]
+              properties: { activo: { type: boolean }, motivo: { type: string, maxLength: 500 } }
+      responses:
+        '200': { description: OK }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+
+  /ministerios:
+    get:
+      tags: [Ministerios]
+      summary: Listado con totalIntegrantes y coordinadores (ministerios:leer)
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Q' }
+        - { $ref: '#/components/parameters/Orden' }
+        - { name: activo, in: query, schema: { type: boolean } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Ministerio' } }
+                  meta: { $ref: '#/components/schemas/Meta' }
+    post:
+      tags: [Ministerios]
+      summary: Crear (ADMIN, PASTOR); nombre único sin distinguir mayúsculas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre]
+              properties:
+                { nombre: { type: string }, descripcion: { type: string, nullable: true } }
+      responses:
+        '201': { description: Creado }
+        '409': { $ref: '#/components/responses/Conflicto' }
+  /ministerios/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Ministerios]
+      summary: Detalle
+      responses:
+        '200': { description: OK }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+    patch:
+      tags: [Ministerios]
+      summary: Editar nombre / descripción (ADMIN, PASTOR)
+      responses:
+        '200': { description: OK }
+        '409': { $ref: '#/components/responses/Conflicto' }
+  /ministerios/{id}/estado:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    patch:
+      tags: [Ministerios]
+      summary: Desactivar / reactivar (ADMIN, PASTOR)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [activo], properties: { activo: { type: boolean } } }
+      responses:
+        '200': { description: OK }
+  /ministerios/{id}/coordinadores:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    put:
+      tags: [Ministerios]
+      summary: Reemplazar coordinadores (ADMIN, PASTOR)
+      description: Solo usuarios activos con rol COORDINADOR o PASTOR. Lista vacía permitida.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [usuarioIds]
+              properties: { usuarioIds: { type: array, items: { type: string, format: uuid } } }
+      responses:
+        '200': { description: OK }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /ministerios/{id}/miembros:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Ministerios]
+      summary: Integrantes (por defecto solo vínculos activos)
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Q' }
+        - { name: incluirHistoricos, in: query, schema: { type: boolean, default: false } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Integrante' } }
+                  meta: { $ref: '#/components/schemas/Meta' }
+    post:
+      tags: [Ministerios]
+      summary: Vincular miembros (ADMIN, PASTOR o COORDINADOR del ministerio)
+      description: Reactiva vínculos previos; ids repetidos se ignoran; todo o nada.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [miembroIds]
+              properties: { miembroIds: { type: array, items: { type: string, format: uuid } } }
+      responses:
+        '200': { description: Ministerio actualizado }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /ministerios/{id}/miembros/{miembroId}:
+    parameters:
+      - { $ref: '#/components/parameters/Id' }
+      - { name: miembroId, in: path, required: true, schema: { type: string, format: uuid } }
+    delete:
+      tags: [Ministerios]
+      summary: Desvincular (soft, guarda fechaSalida); ADMIN, PASTOR o COORDINADOR del ministerio
+      responses:
+        '204': { $ref: '#/components/responses/SinContenido' }
+        '403': { $ref: '#/components/responses/Prohibido' }
         '404': { $ref: '#/components/responses/NoEncontrado' }
