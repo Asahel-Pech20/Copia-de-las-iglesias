@@ -1,0 +1,334 @@
+// Modelo de datos de AppIglesia — fuente: specs.md §6.
+// Dueño: B1. Cambios solo vía PR revisado por B1 y el dueño del modelo (AGENTS.md §3).
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────── Enums ─────────────
+
+enum Rol {
+  ADMIN
+  PASTOR
+  SECRETARIO
+  TESORERO
+  COORDINADOR
+}
+
+enum TipoEvento {
+  RELIGIOSO
+  ADMINISTRATIVO
+}
+
+enum CategoriaEvento {
+  CULTO
+  REUNION
+  ACTIVIDAD
+  OTRO
+}
+
+enum EstadoEvento {
+  PROGRAMADO
+  CANCELADO
+  REALIZADO
+}
+
+enum ConceptoDonacion {
+  DIEZMO
+  OFRENDA
+  PRIMICIA
+  DONACION_ESPECIAL
+  OTRO
+}
+
+enum MetodoPago {
+  EFECTIVO
+  TRANSFERENCIA
+  TARJETA
+  CHEQUE
+  OTRO
+}
+
+enum PrioridadAnuncio {
+  NORMAL
+  IMPORTANTE
+}
+
+// ───────────── B1 · Usuarios y autenticación ─────────────
+
+model Usuario {
+  id           String    @id @default(uuid())
+  nombre       String
+  email        String    @unique
+  // Nulo mientras el usuario no configura su contraseña desde la invitación (B1-14)
+  passwordHash String?
+  rol          Rol
+  activo       Boolean   @default(true)
+  ultimoAcceso DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  refreshTokens          RefreshToken[]
+  resetTokens            PasswordResetToken[]
+  ministeriosCoordinados MinisterioCoordinador[]
+  eventosCreados         Evento[]                @relation("EventoCreador")
+  asistenciasRegistradas Asistencia[]            @relation("AsistenciaRegistrador")
+  donacionesRegistradas  Donacion[]              @relation("DonacionRegistrador")
+  donacionesActualizadas Donacion[]              @relation("DonacionActualizador")
+  anuncios               Anuncio[]
+
+  @@map("usuarios")
+}
+
+model RefreshToken {
+  id         String    @id @default(uuid())
+  usuarioId  String
+  tokenHash  String    @unique
+  expiraEn   DateTime
+  revocadoEn DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  usuarioId String
+  tokenHash String    @unique
+  expiraEn  DateTime
+  usadoEn   DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@map("password_reset_tokens")
+}
+
+// ───────────── B2 · Miembros y ministerios ─────────────
+
+model Miembro {
+  id              String    @id @default(uuid())
+  nombre          String
+  apellidos       String
+  telefono        String?
+  email           String?
+  fechaIngreso    DateTime  @db.Date
+  fechaNacimiento DateTime? @db.Date
+  direccion       String?
+  notas           String?
+  activo          Boolean   @default(true)
+  fechaBaja       DateTime? @db.Date
+  motivoBaja      String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  ministerios   MiembroMinisterio[]
+  responsableDe EventoResponsable[]
+  asistencias   Asistencia[]
+  donaciones    Donacion[]
+
+  @@index([apellidos, nombre])
+  @@index([activo])
+  @@map("miembros")
+}
+
+model Ministerio {
+  id          String   @id @default(uuid())
+  nombre      String   @unique
+  descripcion String?
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  coordinadores MinisterioCoordinador[]
+  miembros      MiembroMinisterio[]
+  eventos       Evento[]
+
+  @@map("ministerios")
+}
+
+model MinisterioCoordinador {
+  ministerioId String
+  usuarioId    String
+
+  ministerio Ministerio @relation(fields: [ministerioId], references: [id])
+  usuario    Usuario    @relation(fields: [usuarioId], references: [id])
+
+  @@id([ministerioId, usuarioId])
+  @@index([usuarioId])
+  @@map("ministerio_coordinadores")
+}
+
+model MiembroMinisterio {
+  miembroId    String
+  ministerioId String
+  fechaUnion   DateTime  @default(now())
+  fechaSalida  DateTime?
+  activo       Boolean   @default(true)
+
+  miembro    Miembro    @relation(fields: [miembroId], references: [id])
+  ministerio Ministerio @relation(fields: [ministerioId], references: [id])
+
+  @@id([miembroId, ministerioId])
+  @@index([ministerioId])
+  @@map("miembro_ministerios")
+}
+
+// ───────────── B3 · Eventos, asistencia y anuncios ─────────────
+
+model Evento {
+  id                String          @id @default(uuid())
+  titulo            String
+  descripcion       String?
+  tipo              TipoEvento
+  categoria         CategoriaEvento
+  fechaInicio       DateTime
+  fechaFin          DateTime?
+  lugar             String
+  estado            EstadoEvento    @default(PROGRAMADO)
+  motivoCancelacion String?
+  ministerioId      String?
+  creadoPorId       String
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  ministerio   Ministerio?         @relation(fields: [ministerioId], references: [id])
+  creadoPor    Usuario             @relation("EventoCreador", fields: [creadoPorId], references: [id])
+  responsables EventoResponsable[]
+  asistencias  Asistencia[]
+  anuncios     Anuncio[]
+
+  @@index([fechaInicio])
+  @@index([ministerioId])
+  @@map("eventos")
+}
+
+model EventoResponsable {
+  eventoId  String
+  miembroId String
+
+  evento  Evento  @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  miembro Miembro @relation(fields: [miembroId], references: [id])
+
+  @@id([eventoId, miembroId])
+  @@map("evento_responsables")
+}
+
+model Asistencia {
+  id              String   @id @default(uuid())
+  eventoId        String
+  miembroId       String
+  presente        Boolean
+  registradoPorId String
+  registradoEn    DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  evento        Evento  @relation(fields: [eventoId], references: [id])
+  miembro       Miembro @relation(fields: [miembroId], references: [id])
+  registradoPor Usuario @relation("AsistenciaRegistrador", fields: [registradoPorId], references: [id])
+
+  @@unique([eventoId, miembroId])
+  @@index([miembroId])
+  @@map("asistencias")
+}
+
+model Anuncio {
+  id               String           @id @default(uuid())
+  titulo           String
+  // Texto plano o markdown simple
+  contenido        String
+  prioridad        PrioridadAnuncio @default(NORMAL)
+  fechaPublicacion DateTime
+  fechaExpiracion  DateTime?
+  eventoId         String?
+  autorId          String
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  evento Evento? @relation(fields: [eventoId], references: [id], onDelete: SetNull)
+  autor  Usuario @relation(fields: [autorId], references: [id])
+
+  @@index([fechaPublicacion])
+  @@map("anuncios")
+}
+
+// ───────────── B4 · Donaciones ─────────────
+
+model Donacion {
+  id               String           @id @default(uuid())
+  fecha            DateTime         @db.Date
+  monto            Decimal          @db.Decimal(12, 2)
+  concepto         ConceptoDonacion
+  conceptoDetalle  String?
+  metodo           MetodoPago
+  // Nulo ⇔ donación anónima (specs.md §6, reglas de integridad)
+  miembroId        String?
+  anonima          Boolean          @default(false)
+  referencia       String?
+  notas            String?
+  anulada          Boolean          @default(false)
+  motivoAnulacion  String?
+  anuladaEn        DateTime?
+  registradoPorId  String
+  actualizadoPorId String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  miembro        Miembro? @relation(fields: [miembroId], references: [id])
+  registradoPor  Usuario  @relation("DonacionRegistrador", fields: [registradoPorId], references: [id])
+  actualizadoPor Usuario? @relation("DonacionActualizador", fields: [actualizadoPorId], references: [id])
+
+  @@index([fecha])
+  @@index([miembroId])
+  @@map("donaciones")
+}
+
+// ───────────── B1 · Configuración de la iglesia ─────────────
+
+// Fila única con id fijo = 1
+model ConfiguracionIglesia {
+  id          Int      @id @default(1)
+  nombre      String
+  logoUrl     String?
+  direccion   String?
+  ciudad      String?
+  telefono    String?
+  email       String?
+  sitioWeb    String?
+  moneda      String   @default("MXN")
+  zonaHoraria String   @default("America/Mexico_City")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("configuracion_iglesia")
+}
+
+model HorarioReunion {
+  id         String   @id @default(uuid())
+  nombre     String
+  // 0 = domingo … 6 = sábado
+  diaSemana  Int
+  // Formato "HH:mm"
+  horaInicio String
+  horaFin    String?
+  lugar      String?
+  activo     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([diaSemana, horaInicio])
+  @@map("horarios_reunion")
+}

@@ -1,0 +1,50 @@
+# Servicios de desarrollo: docker compose up -d
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: iglesia-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: iglesia
+      POSTGRES_PASSWORD: iglesia
+      POSTGRES_DB: iglesia
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U iglesia -d iglesia']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # BD exclusiva para pruebas (datos en memoria, se pierden al detener)
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: iglesia-postgres-test
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: iglesia
+      POSTGRES_PASSWORD: iglesia
+      POSTGRES_DB: iglesia_test
+    ports:
+      - '5433:5432'
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U iglesia -d iglesia_test']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Captura los correos (recuperación de contraseña) — UI en http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: iglesia-mailpit
+    restart: unless-stopped
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+
+volumes:
+  postgres-data:

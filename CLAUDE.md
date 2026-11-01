@@ -16,7 +16,12 @@ Aplicación web de administración interna de una iglesia (proyecto de la materi
 - **Frontend**: React 19 + Vite + TypeScript + Tailwind + shadcn/ui + TanStack Query + React Hook Form + FullCalendar + Recharts. Mocks: MSW.
 - **Monorepo** pnpm: `backend/`, `frontend/`, `docs/`. Docker: postgres, postgres-test, mailpit.
 
-## Comandos (cuando exista el código)
+## Arnés de IA
+Claude Code configurado en `.claude/`: permisos (`settings.json`), hooks de formateo y verificación (`hooks/`) y el comando `/tarea <ID>` (`commands/tarea.md`). Detalle → [docs/arnes.md](docs/arnes.md). Preferencias personales en `.claude/settings.local.json` (git-ignored).
+
+## Comandos
+**Equipo nuevo:** primero `node scripts/verificar-equipo.mjs` y [docs/requisitos.md](docs/requisitos.md) (qué instalar según tu parte y tu laptop; opciones sin Docker).
+Requiere pnpm instalado (`npm install -g pnpm`): los scripts raíz lo llaman directamente. El hook `Stop` usa `corepack pnpm` si no lo encuentra.
 ```bash
 docker compose up -d                 # BD + correo
 pnpm install
@@ -60,10 +65,24 @@ Tareas: `docs/README.md` → `docs/{backend,frontend}/<subseccion>/plan.md` → 
 | 2026-10-30 | Un solo `schema.prisma`, creado completo por B1 en Fase 0; cambios vía PR revisado por B1. |
 | 2026-10-30 | Equipo: Santiago Asahel Pech Ake (B1/F1), Nataly Marisol Santos Miam (B2/F2), Genaro Aurelio Antonio Pacheco (B3/F3), Oscar Michel Matos May (B4/F4). |
 | 2026-10-30 | Cartelera pública (`/public/cartelera`) de solo lectura para mostrar anuncios y eventos a los miembros. |
+| 2026-10-31 | TypeScript fijado en `~6.0` (typescript-eslint aún no soporta TS 7). pnpm fijado en `packageManager`. `@types/node` 22 (Node del spec). |
+| 2026-10-31 | Arnés de Claude Code en `.claude/` (permisos, hooks, `/tarea`). Ver `docs/arnes.md`. |
+| 2026-10-31 | Prisma 7 con `prisma.config.ts` y adaptador `pg`; cliente generado en `backend/src/generated` (git-ignored). |
+| 2026-10-31 | `Usuario.passwordHash` opcional: el ADMIN crea usuarios sin contraseña y reciben invitación (48 h). |
+| 2026-10-31 | Formato de respuestas de auth y listas permitidas de moneda/zona horaria definidas por B1 (ver `specs.md §7.2`). |
+| 2026-10-31 | CI con `actions/checkout@v7` y `setup-node@v7` (Node 24) en `ubuntu-24.04` fijo (aviso de Oscar). |
+| 2026-10-31 | Permisos del coordinador con sufijo `-propio` (`specs.md §3`); se usan con `autorizarAlguno` + `esCoordinadorDe`. |
 
 ## Estado actual
-- **Fase 0 — Arranque**: documentación creada. Código aún no iniciado.
-- Siguiente paso: B1-01 (monorepo + Docker) y F1-01 (Vite + Tailwind + shadcn).
+- **B1 y F1 completos** (rama `feat/B1-F1-base`, PR [Surer46/IglesyApp#1](https://github.com/Surer46/IglesyApp/pull/1) hacia `develop`, CI en verde; falta aprobación). Backend: 152 pruebas; frontend: 85. Probado de punta a punta: login real, sesión al recargar, invitación por Mailpit, logo servido desde el backend, Swagger.
+- Criterios de B1 aún abiertos: revisión del schema por B2/B3/B4 en el PR, `prisma studio` sin verificar.
+- **Ya desbloqueado para el equipo:** `autenticar`, `autorizar`, `autorizarAlguno`, `esCoordinadorDe` (`middlewares/auth.ts`), `validar`, `AppError`, paginación, plantilla `modules/_plantilla/`, `loginComo(rol)` para pruebas, componentes de `components/comunes` y MSW. Guía: `backend/README.md`.
+- Siguiente: Nataly (B2-01 miembros), Genaro (B3-01 eventos) y Oscar (B4-01 donaciones) pueden empezar.
+
+### Cómo levantar todo
+1. `docker compose up -d` · 2. `cp backend/.env.example backend/.env` (una vez) · 3. `pnpm install` · 4. `pnpm --filter backend db:deploy` y `db:seed` · 5. `pnpm dev`.
+- El frontend usa MSW por defecto en desarrollo; para usar el backend real: `frontend/.env` con `VITE_USE_MOCKS=false`.
+- Usuarios: `<rol>@iglesia.local` / `SEED_PASSWORD` (backend real) o `Iglesia123` (mocks, `frontend/src/mocks/datos/b1.ts`).
 
 ## Pendientes / preguntas abiertas
 - Confirmar moneda y zona horaria de la iglesia real.

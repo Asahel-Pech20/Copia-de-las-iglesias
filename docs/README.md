@@ -1,6 +1,6 @@
 # Índice de trabajo — AppIglesia
 
-Lectura obligatoria antes de empezar: [CLAUDE.md](../CLAUDE.md) → [AGENTS.md](../AGENTS.md) → [specs.md](../specs.md).
+Lectura obligatoria antes de empezar: [requisitos.md](requisitos.md) (revisa tu laptop con `node scripts/verificar-equipo.mjs`) → [CLAUDE.md](../CLAUDE.md) → [AGENTS.md](../AGENTS.md) → [specs.md](../specs.md).
 
 ## Cómo usar esta carpeta
 1. Busca tu subsección en la tabla (cada integrante tiene una subsección de backend y su par de frontend).
