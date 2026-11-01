@@ -78,13 +78,32 @@ describe('POST /miembros (B2-01)', () => {
     const res = await api().post('/miembros', {
       nombre: 'Ana',
       apellidos: 'Pérez',
-      fechaIngreso: '2999-01-01',
+      fechaIngreso: '2024-01-01',
       telefono: '123',
       email: 'no-es-correo',
     });
     expect(res.status).toBe(400);
     const campos = res.body.error.details.map((d: { campo: string }) => d.campo);
-    expect(campos).toEqual(expect.arrayContaining(['fechaIngreso', 'telefono', 'email']));
+    expect(campos).toEqual(expect.arrayContaining(['telefono', 'email']));
+
+    // "Futura" se compara con hoy en la zona horaria de la iglesia
+    const futura = await api().post('/miembros', {
+      nombre: 'Ana',
+      apellidos: 'Pérez',
+      fechaIngreso: '2999-01-01',
+      fechaNacimiento: '2999-02-02',
+    });
+    expect(futura.status).toBe(400);
+    expect(futura.body.error.details.map((d: { campo: string }) => d.campo)).toEqual([
+      'fechaIngreso',
+      'fechaNacimiento',
+    ]);
+    const hoy = await api().post('/miembros', {
+      nombre: 'Ana',
+      apellidos: 'Pérez',
+      fechaIngreso: await miembrosService.hoyIglesia(),
+    });
+    expect(hoy.status).toBe(201);
 
     const extra = await api().post('/miembros', {
       nombre: 'Ana',
@@ -195,6 +214,50 @@ describe('GET /miembros/:id y PATCH /miembros/:id (B2-04)', () => {
     const miembro = await crearMiembro();
     const { auth } = await loginComo('COORDINADOR');
     expect((await api().patch(`/miembros/${miembro.id}`, { nombre: 'X' }, auth)).status).toBe(403);
+  });
+});
+
+describe('paginación de la búsqueda en SQL (revisión del PR #3)', () => {
+  it('pagina y ordena los resultados de la búsqueda sin traer todos los ids', async () => {
+    for (let i = 1; i <= 25; i++) {
+      await crearMiembro({ nombre: `Ána${String(i).padStart(2, '0')}`, apellidos: 'Pérez' });
+    }
+    await crearMiembro({ nombre: 'Luis', apellidos: 'Pérez' });
+
+    const tercera = await api().get('/miembros?q=ana&limit=10&page=3&orden=nombre:asc');
+    expect(tercera.body.meta).toEqual({ page: 3, limit: 10, total: 25, totalPages: 3 });
+    expect(tercera.body.data.map((m: { nombre: string }) => m.nombre)).toEqual([
+      'Ána21',
+      'Ána22',
+      'Ána23',
+      'Ána24',
+      'Ána25',
+    ]);
+
+    const desc = await api().get('/miembros?q=ana&limit=2&orden=nombre:desc');
+    expect(desc.body.data.map((m: { nombre: string }) => m.nombre)).toEqual(['Ána25', 'Ána24']);
+    expect((await api().get('/miembros?q=zzz')).body.meta.total).toBe(0);
+  });
+});
+
+describe('fecha en la zona horaria de la iglesia (revisión del PR #3)', () => {
+  it('a las 19:30 de México (01:30 UTC del día siguiente) sigue siendo el mismo día', () => {
+    const instante = new Date('2026-11-02T01:30:00.000Z');
+    expect(miembrosService.fechaEnZona(instante, 'America/Mexico_City')).toBe('2026-11-01');
+    expect(miembrosService.fechaEnZona(instante, 'UTC')).toBe('2026-11-02');
+  });
+
+  it('la fecha de baja usa la zona horaria configurada', async () => {
+    await prisma.configuracionIglesia.upsert({
+      where: { id: 1 },
+      create: { id: 1, nombre: 'Iglesia', zonaHoraria: 'Pacific/Kiritimati' },
+      update: { zonaHoraria: 'Pacific/Kiritimati' },
+    });
+    const miembro = await crearMiembro();
+    const res = await api().patch(`/miembros/${miembro.id}/estado`, { activo: false });
+    expect(res.body.data.fechaBaja).toBe(
+      miembrosService.fechaEnZona(new Date(), 'Pacific/Kiritimati'),
+    );
   });
 });
 

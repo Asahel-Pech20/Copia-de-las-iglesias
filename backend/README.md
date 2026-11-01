@@ -45,6 +45,7 @@ const ministerios = await seedMinisterios(); // Map nombre → id
 | `miembrosService.existeActivo(id)` | Validar responsables, asistencia, donaciones (B3, B4) |
 | `miembrosService.altasPorMes(desde, hasta)` | Gráfica `altasMiembrosPorMes` (B4) |
 | `miembrosService.listadoParaReporte({ estado })` | Reporte general de miembros (B4) |
+| `miembrosService.hoyIglesia()` | Fecha de hoy (`yyyy-MM-dd`) en la zona horaria configurada de la iglesia |
 | `ministeriosService.miembrosDe(ministerioId)` | Asistencia esperada, reporte por ministerio (B3, B4) |
 | `ministeriosService.ministeriosCoordinadosPor(usuarioId)` | Permisos "-propio" del coordinador (B3) |
 | `ministeriosService.contarActivos()` | Dashboard `totalMinisterios` (B4) |
