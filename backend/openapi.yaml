@@ -1,0 +1,630 @@
+openapi: 3.0.3
+info:
+  title: AppIglesia API
+  version: 1.0.0
+  description: |
+    Contrato de la API (specs.md §7). Respuestas `{ data, meta? }`; errores `{ error: { code, message, details? } }`.
+    Cada dueño agrega aquí las rutas de su módulo (B2: miembros/ministerios, B3: eventos/asistencia/anuncios/public, B4: donaciones/dashboard/reportes).
+servers:
+  - url: /api/v1
+tags:
+  - name: Sistema
+  - name: Auth
+  - name: Usuarios
+  - name: Configuración
+
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    cookieRefresh:
+      type: apiKey
+      in: cookie
+      name: refreshToken
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    Page: { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+    Limit:
+      { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+    Q: { name: q, in: query, schema: { type: string } }
+    Orden: { name: orden, in: query, schema: { type: string, example: 'nombre:asc' } }
+  schemas:
+    Rol:
+      type: string
+      enum: [ADMIN, PASTOR, SECRETARIO, TESORERO, COORDINADOR]
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum:
+                [
+                  VALIDATION_ERROR,
+                  UNAUTHENTICATED,
+                  TOKEN_EXPIRED,
+                  FORBIDDEN,
+                  NOT_FOUND,
+                  CONFLICT,
+                  BUSINESS_RULE,
+                  RATE_LIMITED,
+                  INTERNAL_ERROR,
+                ]
+            message: { type: string }
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  campo: { type: string }
+                  mensaje: { type: string }
+    Meta:
+      type: object
+      properties:
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+        totalPages: { type: integer }
+    Usuario:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        nombre: { type: string }
+        email: { type: string, format: email }
+        rol: { $ref: '#/components/schemas/Rol' }
+        activo: { type: boolean }
+        ultimoAcceso: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Sesion:
+      type: object
+      properties:
+        usuario: { $ref: '#/components/schemas/Usuario' }
+        permisos:
+          type: array
+          items: { type: string, example: 'miembros:leer' }
+    Configuracion:
+      type: object
+      properties:
+        nombre: { type: string }
+        logoUrl: { type: string, nullable: true, description: URL absoluta del logotipo }
+        direccion: { type: string, nullable: true }
+        ciudad: { type: string, nullable: true }
+        telefono: { type: string, nullable: true }
+        email: { type: string, nullable: true }
+        sitioWeb: { type: string, nullable: true }
+        moneda: { type: string, example: MXN }
+        zonaHoraria: { type: string, example: America/Mexico_City }
+    Horario:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        nombre: { type: string }
+        diaSemana: { type: integer, minimum: 0, maximum: 6, description: '0 = domingo' }
+        horaInicio: { type: string, example: '10:00' }
+        horaFin: { type: string, nullable: true, example: '12:00' }
+        lugar: { type: string, nullable: true }
+        activo: { type: boolean }
+  responses:
+    SinContenido: { description: Sin contenido }
+    Validacion:
+      {
+        description: Datos no válidos,
+        content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } },
+      }
+    NoAutenticado:
+      {
+        description: Sin sesión o token expirado,
+        content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } },
+      }
+    Prohibido:
+      {
+        description: El rol no tiene permiso,
+        content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } },
+      }
+    NoEncontrado:
+      {
+        description: No existe,
+        content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } },
+      }
+    Conflicto:
+      {
+        description: Duplicado,
+        content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } },
+      }
+    ReglaNegocio:
+      {
+        description: Regla de negocio,
+        content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } },
+      }
+
+security:
+  - bearer: []
+
+paths:
+  /health:
+    get:
+      tags: [Sistema]
+      summary: Estado del servidor
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                {
+                  type: object,
+                  properties:
+                    {
+                      data: { type: object, properties: { status: { type: string, example: ok } } },
+                    },
+                }
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Iniciar sesión (rate limit 5/min/IP)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              {
+                type: object,
+                required: [email, password],
+                properties: { email: { type: string }, password: { type: string } },
+              }
+      responses:
+        '200':
+          description: Access token + sesión. Además fija la cookie httpOnly `refreshToken`.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    allOf:
+                      - { $ref: '#/components/schemas/Sesion' }
+                      - { type: object, properties: { accessToken: { type: string } } }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '429': { description: Demasiados intentos }
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Rota el refresh token (cookie) y devuelve un access token nuevo
+      security: [{ cookieRefresh: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            {
+              application/json:
+                {
+                  schema:
+                    {
+                      type: object,
+                      properties:
+                        { data: { type: object, properties: { accessToken: { type: string } } } },
+                    },
+                },
+            }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoca el refresh token y borra la cookie
+      responses:
+        '204': { $ref: '#/components/responses/SinContenido' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Usuario actual y sus permisos
+      responses:
+        '200':
+          description: OK
+          content:
+            {
+              application/json:
+                {
+                  schema:
+                    { type: object, properties: { data: { $ref: '#/components/schemas/Sesion' } } },
+                },
+            }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+  /auth/me/password:
+    patch:
+      tags: [Auth]
+      summary: Cambiar la contraseña propia
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              {
+                type: object,
+                required: [passwordActual, passwordNueva],
+                properties: { passwordActual: { type: string }, passwordNueva: { type: string } },
+              }
+      responses:
+        '204': { $ref: '#/components/responses/SinContenido' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+  /auth/forgot-password:
+    post:
+      tags: [Auth]
+      summary: Envía un enlace de restablecimiento (responde 204 siempre)
+      security: []
+      requestBody:
+        required: true
+        content:
+          {
+            application/json:
+              {
+                schema:
+                  { type: object, required: [email], properties: { email: { type: string } } },
+              },
+          }
+      responses:
+        '204': { $ref: '#/components/responses/SinContenido' }
+        '400': { $ref: '#/components/responses/Validacion' }
+  /auth/reset-password:
+    post:
+      tags: [Auth]
+      summary: Fija una contraseña nueva con el token del correo (recuperación o invitación)
+      security: []
+      requestBody:
+        required: true
+        content:
+          {
+            application/json:
+              {
+                schema:
+                  {
+                    type: object,
+                    required: [token, password],
+                    properties: { token: { type: string }, password: { type: string } },
+                  },
+              },
+          }
+      responses:
+        '204': { $ref: '#/components/responses/SinContenido' }
+        '400': { $ref: '#/components/responses/Validacion' }
+
+  /usuarios:
+    get:
+      tags: [Usuarios]
+      summary: Listar usuarios (ADMIN)
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Q' }
+        - { $ref: '#/components/parameters/Orden' }
+        - { name: rol, in: query, schema: { $ref: '#/components/schemas/Rol' } }
+        - { name: activo, in: query, schema: { type: boolean } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                {
+                  type: object,
+                  properties:
+                    {
+                      data: { type: array, items: { $ref: '#/components/schemas/Usuario' } },
+                      meta: { $ref: '#/components/schemas/Meta' },
+                    },
+                }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+    post:
+      tags: [Usuarios]
+      summary: Crear usuario (ADMIN). Sin password se envía invitación por correo (48 h).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre, email, rol]
+              properties:
+                {
+                  nombre: { type: string },
+                  email: { type: string },
+                  rol: { $ref: '#/components/schemas/Rol' },
+                  password: { type: string },
+                }
+      responses:
+        '201':
+          {
+            description: Creado,
+            content:
+              {
+                application/json:
+                  {
+                    schema:
+                      {
+                        type: object,
+                        properties: { data: { $ref: '#/components/schemas/Usuario' } },
+                      },
+                  },
+              },
+          }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+  /usuarios/opciones:
+    get:
+      tags: [Usuarios]
+      summary: Usuarios activos para selectores (ADMIN, PASTOR)
+      parameters:
+        - { name: rol, in: query, schema: { $ref: '#/components/schemas/Rol' } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                {
+                  type: object,
+                  properties:
+                    {
+                      data:
+                        {
+                          type: array,
+                          items:
+                            {
+                              type: object,
+                              properties:
+                                {
+                                  id: { type: string },
+                                  nombre: { type: string },
+                                  rol: { $ref: '#/components/schemas/Rol' },
+                                },
+                            },
+                        },
+                    },
+                }
+        '403': { $ref: '#/components/responses/Prohibido' }
+  /usuarios/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Usuarios]
+      summary: Detalle de usuario (ADMIN)
+      responses:
+        '200':
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  {
+                    schema:
+                      {
+                        type: object,
+                        properties: { data: { $ref: '#/components/schemas/Usuario' } },
+                      },
+                  },
+              },
+          }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+    patch:
+      tags: [Usuarios]
+      summary: Editar nombre, correo o rol (ADMIN)
+      requestBody:
+        required: true
+        content:
+          {
+            application/json:
+              {
+                schema:
+                  {
+                    type: object,
+                    properties:
+                      {
+                        nombre: { type: string },
+                        email: { type: string },
+                        rol: { $ref: '#/components/schemas/Rol' },
+                      },
+                  },
+              },
+          }
+      responses:
+        '200':
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  {
+                    schema:
+                      {
+                        type: object,
+                        properties: { data: { $ref: '#/components/schemas/Usuario' } },
+                      },
+                  },
+              },
+          }
+        '409': { $ref: '#/components/responses/Conflicto' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /usuarios/{id}/estado:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    patch:
+      tags: [Usuarios]
+      summary: Activar o desactivar (ADMIN). Desactivar revoca sus sesiones.
+      requestBody:
+        required: true
+        content:
+          {
+            application/json:
+              {
+                schema:
+                  { type: object, required: [activo], properties: { activo: { type: boolean } } },
+              },
+          }
+      responses:
+        '200':
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  {
+                    schema:
+                      {
+                        type: object,
+                        properties: { data: { $ref: '#/components/schemas/Usuario' } },
+                      },
+                  },
+              },
+          }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /usuarios/{id}/reenviar-invitacion:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    post:
+      tags: [Usuarios]
+      summary: Reenvía el correo para configurar contraseña (ADMIN)
+      responses:
+        '204': { $ref: '#/components/responses/SinContenido' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+
+  /configuracion:
+    get:
+      tags: [Configuración]
+      summary: Datos de la iglesia (público)
+      security: []
+      responses:
+        '200':
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  {
+                    schema:
+                      {
+                        type: object,
+                        properties: { data: { $ref: '#/components/schemas/Configuracion' } },
+                      },
+                  },
+              },
+          }
+    put:
+      tags: [Configuración]
+      summary: Actualizar datos de la iglesia (ADMIN)
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/Configuracion' } } }
+      responses:
+        '200':
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  {
+                    schema:
+                      {
+                        type: object,
+                        properties: { data: { $ref: '#/components/schemas/Configuracion' } },
+                      },
+                  },
+              },
+          }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+  /configuracion/logo:
+    post:
+      tags: [Configuración]
+      summary: Subir logotipo (ADMIN). PNG, JPG, WEBP o SVG ≤ 2 MB.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              {
+                type: object,
+                required: [logo],
+                properties: { logo: { type: string, format: binary } },
+              }
+      responses:
+        '200':
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  {
+                    schema:
+                      {
+                        type: object,
+                        properties: { data: { $ref: '#/components/schemas/Configuracion' } },
+                      },
+                  },
+              },
+          }
+        '400': { $ref: '#/components/responses/Validacion' }
+  /configuracion/horarios:
+    get:
+      tags: [Configuración]
+      summary: Horarios de reuniones, ordenados por día y hora (público)
+      security: []
+      responses:
+        '200':
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  {
+                    schema:
+                      {
+                        type: object,
+                        properties:
+                          {
+                            data: { type: array, items: { $ref: '#/components/schemas/Horario' } },
+                          },
+                      },
+                  },
+              },
+          }
+    post:
+      tags: [Configuración]
+      summary: Agregar horario (ADMIN)
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/Horario' } } }
+      responses:
+        '201': { description: Creado }
+        '400': { $ref: '#/components/responses/Validacion' }
+  /configuracion/horarios/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    patch:
+      tags: [Configuración]
+      summary: Editar horario (ADMIN)
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/Horario' } } }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+    delete:
+      tags: [Configuración]
+      summary: Eliminar horario (ADMIN)
+      responses:
+        '204': { $ref: '#/components/responses/SinContenido' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
