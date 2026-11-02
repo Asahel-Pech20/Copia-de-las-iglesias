@@ -1,9 +1,12 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll } from 'vitest';
 import { guardarToken } from '@/lib/api';
 import { reiniciarDb } from '@/mocks/db';
 import { server } from '@/mocks/server';
+
+// findBy*/waitFor esperan 3 s (el default de 1 s no alcanza con debounce de 300 ms y la máquina cargada)
+configure({ asyncUtilTimeout: 3000 });
 
 // Radix usa estas APIs del navegador que jsdom no implementa (no aplica a pruebas en entorno node)
 if (typeof window !== 'undefined') {
