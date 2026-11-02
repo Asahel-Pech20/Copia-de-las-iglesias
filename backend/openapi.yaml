@@ -14,6 +14,10 @@ tags:
   - name: Configuración
   - name: Miembros
   - name: Ministerios
+  - name: Eventos
+  - name: Asistencia
+  - name: Anuncios
+  - name: Público
 
 components:
   securitySchemes:
@@ -173,6 +177,134 @@ components:
         activo: { type: boolean, description: Vínculo activo }
         fechaUnion: { type: string, format: date-time }
         fechaSalida: { type: string, format: date-time, nullable: true }
+    EventoEntrada:
+      type: object
+      properties:
+        titulo: { type: string, maxLength: 150 }
+        descripcion: { type: string, maxLength: 2000, nullable: true }
+        tipo: { type: string, enum: [RELIGIOSO, ADMINISTRATIVO] }
+        categoria: { type: string, enum: [CULTO, REUNION, ACTIVIDAD, OTRO] }
+        fechaInicio: { type: string, format: date-time }
+        fechaFin:
+          {
+            type: string,
+            format: date-time,
+            nullable: true,
+            description: 'Igual o posterior a fechaInicio',
+          }
+        lugar: { type: string, maxLength: 150 }
+        ministerioId: { type: string, format: uuid, nullable: true }
+    Evento:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        titulo: { type: string }
+        descripcion: { type: string, nullable: true }
+        tipo: { type: string, enum: [RELIGIOSO, ADMINISTRATIVO] }
+        categoria: { type: string, enum: [CULTO, REUNION, ACTIVIDAD, OTRO] }
+        fechaInicio: { type: string, format: date-time }
+        fechaFin: { type: string, format: date-time, nullable: true }
+        lugar: { type: string }
+        estado: { type: string, enum: [PROGRAMADO, CANCELADO, REALIZADO] }
+        motivoCancelacion: { type: string, nullable: true }
+        ministerio:
+          allOf: [{ $ref: '#/components/schemas/MinisterioResumen' }]
+          nullable: true
+        totalResponsables: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    EventoDetalle:
+      allOf:
+        - { $ref: '#/components/schemas/Evento' }
+        - type: object
+          properties:
+            creadoPor:
+              { type: object, properties: { id: { type: string }, nombre: { type: string } } }
+            responsables:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: { type: string, format: uuid }
+                  nombre: { type: string }
+                  apellidos: { type: string }
+                  activo: { type: boolean }
+            resumenAsistencia:
+              type: object
+              nullable: true
+              properties:
+                presentes: { type: integer }
+                ausentes: { type: integer }
+                total: { type: integer }
+    MiembroBreve:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        nombre: { type: string }
+        apellidos: { type: string }
+    ListaAsistencia:
+      type: object
+      properties:
+        evento:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            titulo: { type: string }
+            fechaInicio: { type: string, format: date-time }
+            fechaFin: { type: string, format: date-time, nullable: true }
+            estado: { type: string, enum: [PROGRAMADO, CANCELADO, REALIZADO] }
+            ministerio:
+              allOf: [{ $ref: '#/components/schemas/MinisterioResumen' }]
+              nullable: true
+        registros:
+          type: array
+          items:
+            type: object
+            properties:
+              miembro: { $ref: '#/components/schemas/MiembroBreve' }
+              presente: { type: boolean, nullable: true, description: 'null = sin registrar' }
+        totales:
+          type: object
+          properties:
+            presentes: { type: integer }
+            ausentes: { type: integer }
+            sinRegistrar: { type: integer }
+            total: { type: integer }
+    AnuncioEntrada:
+      type: object
+      properties:
+        titulo: { type: string, maxLength: 120 }
+        contenido: { type: string, maxLength: 5000, description: Texto plano o markdown simple }
+        prioridad: { type: string, enum: [NORMAL, IMPORTANTE], default: NORMAL }
+        fechaPublicacion: { type: string, format: date-time, description: Por defecto ahora }
+        fechaExpiracion:
+          {
+            type: string,
+            format: date-time,
+            nullable: true,
+            description: 'Posterior a fechaPublicacion',
+          }
+        eventoId: { type: string, format: uuid, nullable: true }
+    Anuncio:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        titulo: { type: string }
+        contenido: { type: string }
+        prioridad: { type: string, enum: [NORMAL, IMPORTANTE] }
+        fechaPublicacion: { type: string, format: date-time }
+        fechaExpiracion: { type: string, format: date-time, nullable: true }
+        autor: { type: object, properties: { id: { type: string }, nombre: { type: string } } }
+        evento:
+          type: object
+          nullable: true
+          properties:
+            id: { type: string, format: uuid }
+            titulo: { type: string }
+            fechaInicio: { type: string, format: date-time }
+            estado: { type: string, enum: [PROGRAMADO, CANCELADO, REALIZADO] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
   responses:
     SinContenido: { description: Sin contenido }
     Validacion:
@@ -913,3 +1045,339 @@ paths:
         '204': { $ref: '#/components/responses/SinContenido' }
         '403': { $ref: '#/components/responses/Prohibido' }
         '404': { $ref: '#/components/responses/NoEncontrado' }
+
+  /eventos:
+    get:
+      tags: [Eventos]
+      summary: Eventos (eventos:leer)
+      description: |
+        Con `desde` y `hasta` (rango de hasta 93 días) devuelve todo el rango sin paginar (máx. 500), ordenado por `fechaInicio asc`,
+        incluyendo eventos que empiezan antes de `desde` y terminan dentro del rango (calendario).
+        Una fecha sin hora (`yyyy-MM-dd`) es el día completo en la zona horaria de la iglesia.
+        Sin rango: paginado y ordenado por `fechaInicio desc`. Los programados cuya fecha ya pasó se marcan `REALIZADO` al consultar.
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Q' }
+        - { $ref: '#/components/parameters/Orden' }
+        - { name: desde, in: query, schema: { type: string, example: '2026-10-01' } }
+        - { name: hasta, in: query, schema: { type: string, example: '2026-10-31T23:59:59Z' } }
+        - { name: tipo, in: query, schema: { type: string, enum: [RELIGIOSO, ADMINISTRATIVO] } }
+        - name: categoria
+          in: query
+          schema: { type: string, enum: [CULTO, REUNION, ACTIVIDAD, OTRO] }
+        - name: estado
+          in: query
+          schema: { type: string, enum: [PROGRAMADO, CANCELADO, REALIZADO] }
+        - { name: ministerioId, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Evento' } }
+                  meta: { $ref: '#/components/schemas/Meta' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+    post:
+      tags: [Eventos]
+      summary: Crear evento (eventos:crear; COORDINADOR solo con un ministerio que coordina)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - { $ref: '#/components/schemas/EventoEntrada' }
+                - { required: [titulo, tipo, categoria, fechaInicio, lugar] }
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                {
+                  type: object,
+                  properties: { data: { $ref: '#/components/schemas/EventoDetalle' } },
+                }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /eventos/proximos:
+    get:
+      tags: [Eventos]
+      summary: Próximos eventos programados desde ahora (eventos:leer)
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 20, default: 5 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Evento' } }
+  /eventos/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Eventos]
+      summary: Detalle con responsables, ministerio, creador y resumenAsistencia
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                {
+                  type: object,
+                  properties: { data: { $ref: '#/components/schemas/EventoDetalle' } },
+                }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+    patch:
+      tags: [Eventos]
+      summary: Editar (eventos:editar; COORDINADOR solo eventos de su ministerio)
+      description: Un evento `CANCELADO` no se edita (422).
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/EventoEntrada' } } }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /eventos/{id}/cancelar:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    patch:
+      tags: [Eventos]
+      summary: Cancelar (eventos:eliminar). No hay DELETE; la asistencia se conserva
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [motivo]
+              properties: { motivo: { type: string, minLength: 5, maxLength: 300 } }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /eventos/{id}/responsables:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    put:
+      tags: [Eventos]
+      summary: Reemplaza los responsables (máx. 10 miembros activos)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [miembroIds]
+              properties:
+                miembroIds: { type: array, maxItems: 10, items: { type: string, format: uuid } }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /eventos/{id}/asistencia:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Asistencia]
+      summary: Pase de lista (asistencia:leer; COORDINADOR solo su ministerio)
+      description: |
+        Integrantes activos del ministerio del evento (o todos los miembros activos si no tiene ministerio),
+        más quienes ya tienen registro aunque estén inactivos. `q` filtra por nombre; los totales son de toda la lista.
+      parameters: [{ $ref: '#/components/parameters/Q' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                {
+                  type: object,
+                  properties: { data: { $ref: '#/components/schemas/ListaAsistencia' } },
+                }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+    put:
+      tags: [Asistencia]
+      summary: Registrar asistencia (upsert masivo, asistencia:crear)
+      description: |
+        Evento cancelado o que empieza en más de 1 día → 422. Reenviar la lista actualiza (no duplica).
+        Si el evento ya empezó queda `REALIZADO`. Responde la lista actualizada.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [registros]
+              properties:
+                registros:
+                  type: array
+                  minItems: 1
+                  maxItems: 2000
+                  items:
+                    type: object
+                    required: [miembroId, presente]
+                    properties:
+                      miembroId: { type: string, format: uuid }
+                      presente: { type: boolean }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /asistencias:
+    get:
+      tags: [Asistencia]
+      summary: Historial paginado con datos del evento (asistencia:leer; COORDINADOR solo sus ministerios)
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { name: miembroId, in: query, schema: { type: string, format: uuid } }
+        - { name: eventoId, in: query, schema: { type: string, format: uuid } }
+        - { name: desde, in: query, schema: { type: string, format: date } }
+        - { name: hasta, in: query, schema: { type: string, format: date } }
+      responses:
+        '200': { description: OK (ordenado por fecha del evento desc) }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+  /asistencias/resumen:
+    get:
+      tags: [Asistencia]
+      summary: Resumen semanal (semana ISO) o mensual en la zona horaria de la iglesia
+      description: Serie continua (periodos sin datos con ceros). Por defecto 12 semanas o 6 meses hasta hoy; rango máx. 2 años.
+      parameters:
+        - name: periodo
+          in: query
+          required: true
+          schema: { type: string, enum: [semanal, mensual] }
+        - { name: desde, in: query, schema: { type: string, format: date } }
+        - { name: hasta, in: query, schema: { type: string, format: date } }
+        - { name: ministerioId, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        periodo: { type: string, example: '2026-W43' }
+                        eventos: { type: integer }
+                        presentes: { type: integer }
+                        ausentes: { type: integer }
+                        promedioPorEvento: { type: number }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+
+  /anuncios:
+    get:
+      tags: [Anuncios]
+      summary: Anuncios paginados, IMPORTANTE primero (anuncios:leer)
+      description: Con vigentes=true, publicados y no expirados; con vigentes=false, programados o expirados.
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Q' }
+        - { name: vigentes, in: query, schema: { type: boolean } }
+        - { name: prioridad, in: query, schema: { type: string, enum: [NORMAL, IMPORTANTE] } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Anuncio' } }
+                  meta: { $ref: '#/components/schemas/Meta' }
+    post:
+      tags: [Anuncios]
+      summary: Publicar (anuncios:crear)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - { $ref: '#/components/schemas/AnuncioEntrada' }
+                - { required: [titulo, contenido] }
+      responses:
+        '201': { description: Creado }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /anuncios/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Anuncios]
+      summary: Detalle (anuncios:leer)
+      responses:
+        '200': { description: OK }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+    patch:
+      tags: [Anuncios]
+      summary: Editar (anuncios:editar)
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/AnuncioEntrada' } } }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+    delete:
+      tags: [Anuncios]
+      summary: Eliminar (borrado físico, anuncios:eliminar)
+      responses:
+        '204': { $ref: '#/components/responses/SinContenido' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+
+  /public/cartelera:
+    get:
+      tags: [Público]
+      summary: Cartelera pública (sin sesión; cache 60 s; 60 solicitudes/min por IP)
+      description: Solo datos públicos; no incluye miembros, usuarios ni responsables.
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      iglesia:
+                        type: object
+                        properties:
+                          nombre: { type: string }
+                          logoUrl: { type: string, nullable: true }
+                          direccion: { type: string, nullable: true }
+                          ciudad: { type: string, nullable: true }
+                          telefono: { type: string, nullable: true }
+                          email: { type: string, nullable: true }
+                          sitioWeb: { type: string, nullable: true }
+                      horarios: { type: array, items: { $ref: '#/components/schemas/Horario' } }
+                      anuncios: { type: array, items: { type: object } }
+                      eventosProximos: { type: array, items: { type: object } }
+        '429': { description: Demasiadas solicitudes }

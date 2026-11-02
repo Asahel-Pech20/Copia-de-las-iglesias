@@ -13,7 +13,8 @@ const PUBLICAS = new Set([
   'POST /auth/reset-password',
   'GET /configuracion',
   'GET /configuracion/horarios',
-  // B3: 'GET /public/cartelera'
+  // B3-15: cartelera pública de solo lectura
+  'GET /public/cartelera',
 ]);
 
 /** Rutas de la propia cuenta: requieren sesión pero no un permiso de módulo. */

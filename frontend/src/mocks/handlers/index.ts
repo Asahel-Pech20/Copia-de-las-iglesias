@@ -1,7 +1,10 @@
 import { http, HttpResponse } from 'msw';
 import { ruta } from '../utils';
+import { anunciosHandlers } from './anuncios';
+import { asistenciaHandlers } from './asistencia';
 import { authHandlers } from './auth';
 import { configuracionHandlers } from './configuracion';
+import { eventosHandlers } from './eventos';
 import { miembrosHandlers } from './miembros';
 import { ministeriosHandlers } from './ministerios';
 import { usuariosHandlers } from './usuarios';
@@ -14,4 +17,7 @@ export const handlers = [
   ...configuracionHandlers,
   ...miembrosHandlers,
   ...ministeriosHandlers,
+  ...eventosHandlers,
+  ...asistenciaHandlers,
+  ...anunciosHandlers,
 ];

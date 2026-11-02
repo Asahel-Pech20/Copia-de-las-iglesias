@@ -51,6 +51,23 @@ const ministerios = await seedMinisterios(); // Map nombre → id
 | `ministeriosService.contarActivos()` | Dashboard `totalMinisterios` (B4) |
 | `ministeriosService.participacionPorMinisterio()` | Gráfica `miembrosPorMinisterio` y RF-09.3 (B4) |
 
+## Servicios de B3 para otros módulos
+
+| Función | Uso |
+|---|---|
+| `eventosService.proximos(limit)` | Dashboard `eventosProximos` (B4), cartelera |
+| `eventosService.contarPorRango(desde, hasta)` | Eventos no cancelados en un rango (B4) |
+| `asistenciaService.resumenPorPeriodo(periodo, desde, hasta, ministerioIds?)` | Gráfica `asistenciaSemanal` y reportes (B4); agrupa en la zona horaria de la configuración |
+| `asistenciaService.contarRegistradas(desde, hasta)` | Dashboard `asistenciasRegistradas` (presentes en eventos no cancelados, B4) |
+| `asistenciaService.porEvento(eventoId)` | Reporte de asistencia por evento RF-09.2 (B4) |
+| `asistenciaService.participacionPorMinisterio(desde, hasta)` | Reporte de participación por ministerio RF-09.3 (B4) |
+| `asistenciaService.porcentajeMiembro(miembroId, meses)` | Resumen de asistencia en el detalle de miembro (B2-04) |
+| `anunciosService.vigentes({ soloImportantes, limit })` | Dashboard `anunciosImportantes` (B4), cartelera |
+
+Los eventos `PROGRAMADO` cuya fecha ya pasó se marcan `REALIZADO` al consultarlos (`eventosService.marcarRealizados()`), sin tareas programadas.
+
+Fechas sin hora (`?desde=2026-10-31&hasta=2026-10-31` en `/eventos` y `/asistencias`) cuentan como días completos en la zona horaria de la configuración (`eventos/eventos.fechas.ts`: `inicioDiaEnZona`, `finDiaEnZona`, `fechaEnZona`).
+
 ## Crear un módulo nuevo
 
 1. Copia `src/modules/_plantilla/` a `src/modules/<modulo>/` y renombra los archivos: `<modulo>.routes.ts`, `.controller.ts`, `.service.ts`, `.schemas.ts`, `.test.ts`.
