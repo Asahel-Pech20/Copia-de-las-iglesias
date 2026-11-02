@@ -4,29 +4,29 @@
 - **RF:** RF-05.1 · **Fase:** 1 · **Tamaño:** S · **Depende de:** B1-11
 - `GET /ministerios?q&activo`, `POST`, `GET /:id`, `PATCH /:id`, `PATCH /:id/estado`. Nombre único (sin distinguir mayúsculas). Listado incluye `totalIntegrantes` y `coordinadores` (id, nombre).
 - **Criterios de aceptación**
-  - [ ] Nombre duplicado → 409.
-  - [ ] Solo ADMIN y PASTOR crean/editan/desactivan.
+  - [x] Nombre duplicado → 409.
+  - [x] Solo ADMIN y PASTOR crean/editan/desactivan.
 
 ### B2-08 · Asignar coordinadores
 - **RF:** RF-05.2 · **Fase:** 2 · **Tamaño:** S · **Depende de:** B2-07
 - `PUT /ministerios/:id/coordinadores { usuarioIds[] }` reemplaza la lista. Solo usuarios activos con rol `COORDINADOR` o `PASTOR`.
 - **Criterios de aceptación**
-  - [ ] Usuario con otro rol o inactivo → 422 indicando cuál.
-  - [ ] Lista vacía permitida.
+  - [x] Usuario con otro rol o inactivo → 422 indicando cuál.
+  - [x] Lista vacía permitida.
 
 ### B2-09 · Vincular y desvincular miembros
 - **RF:** RF-05.3 · **Fase:** 2 · **Tamaño:** M · **Depende de:** B2-07, B2-05
 - `POST /ministerios/:id/miembros { miembroIds[] }` (reactiva vínculos previos si existen), `DELETE /ministerios/:id/miembros/:miembroId` (soft: `activo=false`, `fechaSalida`). Permitido a ADMIN, PASTOR y COORDINADOR **del ministerio**.
 - **Criterios de aceptación**
-  - [ ] COORDINADOR de otro ministerio → 403.
-  - [ ] Miembro inactivo → 422.
-  - [ ] Vincular varios en una sola transacción; ids repetidos se ignoran.
+  - [x] COORDINADOR de otro ministerio → 403.
+  - [x] Miembro inactivo → 422.
+  - [x] Vincular varios en una sola transacción; ids repetidos se ignoran.
 
 ### B2-10 · Consultar integrantes
 - **RF:** RF-05.4 · **Fase:** 2 · **Tamaño:** S · **Depende de:** B2-09
 - `GET /ministerios/:id/miembros?q&incluirHistoricos` paginado, con `fechaUnion` y `fechaSalida`.
 - **Criterios de aceptación**
-  - [ ] Por defecto solo vínculos activos.
+  - [x] Por defecto solo vínculos activos.
 
 ### B2-11 · Funciones de servicio para otros módulos
 - **Fase:** 2 · **Tamaño:** S · **Depende de:** B2-10
@@ -38,5 +38,5 @@
 - **Fase:** 2 · **Tamaño:** M · **Depende de:** B1-04, B2-09
 - Extender `seed.ts` con @faker-js/faker (locale `es_MX`): ~60 miembros (10 % inactivos), ministerios Música, Jóvenes, Niños, Enseñanza, Servicio, Damas; vínculos y coordinadores. Exponer funciones `seedMiembros()` para que B3/B4 agreguen eventos, asistencias y donaciones encima.
 - **Criterios de aceptación**
-  - [ ] Seed idempotente y reproducible (semilla fija de faker).
-  - [ ] Documentado en `backend/README.md`.
+  - [x] Seed idempotente y reproducible (semilla fija de faker).
+  - [x] Documentado en `backend/README.md`.

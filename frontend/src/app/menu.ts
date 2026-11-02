@@ -1,4 +1,4 @@
-import { Home, type LucideIcon, Settings, UserCog } from 'lucide-react';
+import { Home, type LucideIcon, Network, Settings, UserCog, Users } from 'lucide-react';
 import type { Permiso } from '@/types/comunes';
 
 export interface EntradaMenu {
@@ -16,6 +16,8 @@ export interface EntradaMenu {
  */
 export const MENU: EntradaMenu[] = [
   { etiqueta: 'Inicio', ruta: '/', icono: Home },
+  { etiqueta: 'Miembros', ruta: '/miembros', icono: Users, permiso: 'miembros:leer' },
+  { etiqueta: 'Ministerios', ruta: '/ministerios', icono: Network, permiso: 'ministerios:leer' },
   { etiqueta: 'Usuarios', ruta: '/usuarios', icono: UserCog, permiso: 'usuarios:leer' },
   {
     etiqueta: 'Configuración',
