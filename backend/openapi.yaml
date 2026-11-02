@@ -18,6 +18,9 @@ tags:
   - name: Asistencia
   - name: Anuncios
   - name: Público
+  - name: Donaciones
+  - name: Dashboard
+  - name: Reportes
 
 components:
   securitySchemes:
@@ -40,6 +43,11 @@ components:
       { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
     Q: { name: q, in: query, schema: { type: string } }
     Orden: { name: orden, in: query, schema: { type: string, example: 'nombre:asc' } }
+    Formato:
+      name: formato
+      in: query
+      description: json (vista previa), pdf o xlsx (archivo adjunto reporte-<tipo>-<fecha>)
+      schema: { type: string, enum: [json, pdf, xlsx], default: json }
   schemas:
     Rol:
       type: string
@@ -305,7 +313,102 @@ components:
             estado: { type: string, enum: [PROGRAMADO, CANCELADO, REALIZADO] }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
+    DonacionEntrada:
+      type: object
+      properties:
+        fecha: { type: string, format: date, description: 'No futura (zona horaria de la iglesia)' }
+        monto:
+          type: string
+          example: '1500.00'
+          description: 'Decimal mayor que 0 con 2 decimales como máximo (también se acepta number)'
+        concepto: { type: string, enum: [DIEZMO, OFRENDA, PRIMICIA, DONACION_ESPECIAL, OTRO] }
+        conceptoDetalle:
+          { type: string, nullable: true, description: 'Obligatorio si concepto = OTRO' }
+        metodo: { type: string, enum: [EFECTIVO, TRANSFERENCIA, TARJETA, CHEQUE, OTRO] }
+        miembroId:
+          { type: string, format: uuid, nullable: true, description: 'Nulo = aportación anónima' }
+        anonima: { type: boolean, description: 'true con miembroId → 400' }
+        referencia: { type: string, nullable: true }
+        notas: { type: string, nullable: true }
+    Donacion:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        fecha: { type: string, format: date }
+        monto: { type: string, example: '1500.00' }
+        concepto: { type: string }
+        conceptoDetalle: { type: string, nullable: true }
+        metodo: { type: string }
+        anonima: { type: boolean }
+        referencia: { type: string, nullable: true }
+        notas: { type: string, nullable: true }
+        anulada: { type: boolean }
+        motivoAnulacion: { type: string, nullable: true }
+        anuladaEn: { type: string, format: date-time, nullable: true }
+        miembro: { allOf: [{ $ref: '#/components/schemas/MiembroBreve' }], nullable: true }
+        registradoPor:
+          { type: object, properties: { id: { type: string }, nombre: { type: string } } }
+        actualizadoPor:
+          type: object
+          nullable: true
+          properties: { id: { type: string }, nombre: { type: string } }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    GrupoIngresos:
+      type: object
+      properties:
+        clave:
+          { type: string, example: '2026-10', description: 'Día, semana ISO, mes o valor del enum' }
+        total: { type: string, example: '15230.00' }
+        cantidad: { type: integer }
+    DatoReporte:
+      type: object
+      properties:
+        etiqueta: { type: string }
+        valor: { nullable: true, oneOf: [{ type: string }, { type: number }] }
+        tipo: { type: string }
+    Reporte:
+      type: object
+      description: Formato común de los 4 reportes (lib/exportadores/reporte.ts)
+      properties:
+        tipo: { type: string, enum: [miembros, asistencia, ministerios, ingresos] }
+        titulo: { type: string }
+        subtitulo: { type: string }
+        filtros: { type: array, items: { $ref: '#/components/schemas/DatoReporte' } }
+        resumen: { type: array, items: { $ref: '#/components/schemas/DatoReporte' } }
+        secciones:
+          type: array
+          items:
+            type: object
+            properties:
+              titulo: { type: string }
+              columnas:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    clave: { type: string }
+                    titulo: { type: string }
+                    tipo:
+                      type: string
+                      enum: [texto, fecha, fechaHora, moneda, numero, porcentaje]
+                    ancho: { type: number }
+              filas: { type: array, items: { type: object } }
+              totales: { type: object }
+        generadoEn: { type: string, format: date-time }
+        generadoPor: { type: string }
   responses:
+    Reporte:
+      description: 'JSON { data: Reporte } o archivo PDF / Excel'
+      content:
+        application/json:
+          {
+            schema:
+              { type: object, properties: { data: { $ref: '#/components/schemas/Reporte' } } },
+          }
+        application/pdf: { schema: { type: string, format: binary } }
+        application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+          { schema: { type: string, format: binary } }
     SinContenido: { description: Sin contenido }
     Validacion:
       {
@@ -1381,3 +1484,231 @@ paths:
                       anuncios: { type: array, items: { type: object } }
                       eventosProximos: { type: array, items: { type: object } }
         '429': { description: Demasiadas solicitudes }
+
+  /donaciones:
+    get:
+      tags: [Donaciones]
+      summary: Aportaciones paginadas por fecha desc (donaciones:leer — ADMIN, PASTOR, TESORERO)
+      description: Excluye anuladas salvo incluirAnuladas=true. meta.totalMonto suma el filtro completo sin anuladas.
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Orden' }
+        - { name: desde, in: query, schema: { type: string, format: date } }
+        - { name: hasta, in: query, schema: { type: string, format: date } }
+        - { name: concepto, in: query, schema: { type: string } }
+        - { name: metodo, in: query, schema: { type: string } }
+        - { name: miembroId, in: query, schema: { type: string, format: uuid } }
+        - { name: anonima, in: query, schema: { type: boolean } }
+        - { name: incluirAnuladas, in: query, schema: { type: boolean } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Donacion' } }
+                  meta:
+                    allOf:
+                      - { $ref: '#/components/schemas/Meta' }
+                      - { type: object, properties: { totalMonto: { type: string } } }
+        '403': { $ref: '#/components/responses/Prohibido' }
+    post:
+      tags: [Donaciones]
+      summary: Registrar aportación (donaciones:crear — ADMIN, TESORERO)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - { $ref: '#/components/schemas/DonacionEntrada' }
+                - { required: [fecha, monto, concepto, metodo] }
+      responses:
+        '201': { description: Creada }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /donaciones/resumen:
+    get:
+      tags: [Donaciones]
+      summary: Ingresos agrupados (donaciones:leer)
+      description: Serie continua (periodos o valores sin datos van en "0.00"). Sin fechas, el mes en curso. Rango máximo 2 años.
+      parameters:
+        - { name: desde, in: query, schema: { type: string, format: date } }
+        - { name: hasta, in: query, schema: { type: string, format: date } }
+        - name: agrupar
+          in: query
+          schema: { type: string, enum: [dia, semana, mes, concepto, metodo], default: mes }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      desde: { type: string, format: date }
+                      hasta: { type: string, format: date }
+                      agrupar: { type: string }
+                      total: { type: string }
+                      cantidad: { type: integer }
+                      grupos: { type: array, items: { $ref: '#/components/schemas/GrupoIngresos' } }
+        '400': { $ref: '#/components/responses/Validacion' }
+  /donaciones/resumen-mensual:
+    get:
+      tags: [Donaciones]
+      summary: Resumen de un mes (donaciones:leer)
+      description: total, mesAnterior, variacionPorcentual (null sin ingresos el mes anterior), porConcepto, porMetodo, anonimas e identificadas. Sin parámetros, el mes en curso.
+      parameters:
+        - { name: anio, in: query, schema: { type: integer } }
+        - { name: mes, in: query, schema: { type: integer, minimum: 1, maximum: 12 } }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Validacion' }
+  /donaciones/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Donaciones]
+      summary: Detalle con auditoría (donaciones:leer)
+      responses:
+        '200': { description: OK }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+    patch:
+      tags: [Donaciones]
+      summary: Editar (donaciones:editar); una anulada → 422
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/DonacionEntrada' } } }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /donaciones/{id}/anular:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    patch:
+      tags: [Donaciones]
+      summary: Anular con motivo (donaciones:eliminar); no existe DELETE
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [motivo]
+              properties: { motivo: { type: string, minLength: 5, maxLength: 300 } }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+
+  /dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Panel principal (dashboard:leer); cache de 60 s que se invalida al cambiar los datos
+      description: La clave `ingresos` se omite (no es null) si el rol no tiene donaciones:leer.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      miembrosActivos: { type: integer }
+                      totalMinisterios: { type: integer }
+                      asistenciasRegistradas:
+                        type: object
+                        properties:
+                          mesActual: { type: integer }
+                          semanaActual: { type: integer }
+                      eventosProximos:
+                        { type: array, items: { $ref: '#/components/schemas/Evento' } }
+                      anunciosImportantes:
+                        { type: array, items: { $ref: '#/components/schemas/Anuncio' } }
+                      graficas:
+                        type: object
+                        properties:
+                          asistenciaSemanal: { type: array, items: { type: object } }
+                          miembrosPorMinisterio: { type: array, items: { type: object } }
+                          altasMiembrosPorMes: { type: array, items: { type: object } }
+                      ingresos:
+                        type: object
+                        properties:
+                          mesActual: { type: string }
+                          mesAnterior: { type: string }
+                          variacionPorcentual: { type: number, nullable: true }
+                          porMes: { type: array, items: { type: object } }
+
+  /reportes/miembros:
+    get:
+      tags: [Reportes]
+      summary: Reporte general de miembros (reportes:generales; COORDINADOR solo sus ministerios)
+      parameters:
+        - name: estado
+          in: query
+          schema: { type: string, enum: [activo, inactivo, todos], default: activo }
+        - { $ref: '#/components/parameters/Formato' }
+      responses:
+        '200': { $ref: '#/components/responses/Reporte' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /reportes/asistencia:
+    get:
+      tags: [Reportes]
+      summary: Asistencia por evento (eventoId) o por periodo semanal/mensual (reportes:generales)
+      parameters:
+        - { name: eventoId, in: query, schema: { type: string, format: uuid } }
+        - { name: desde, in: query, schema: { type: string, format: date } }
+        - { name: hasta, in: query, schema: { type: string, format: date } }
+        - name: periodo
+          in: query
+          schema: { type: string, enum: [semanal, mensual], default: semanal }
+        - { $ref: '#/components/parameters/Formato' }
+      responses:
+        '200': { $ref: '#/components/responses/Reporte' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /reportes/ministerios:
+    get:
+      tags: [Reportes]
+      summary: Participación por ministerio (reportes:generales; COORDINADOR solo sus ministerios)
+      parameters:
+        - { name: ministerioId, in: query, schema: { type: string, format: uuid } }
+        - { name: desde, in: query, schema: { type: string, format: date } }
+        - { name: hasta, in: query, schema: { type: string, format: date } }
+        - { $ref: '#/components/parameters/Formato' }
+      responses:
+        '200': { $ref: '#/components/responses/Reporte' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /reportes/ingresos:
+    get:
+      tags: [Reportes]
+      summary: Ingresos por periodo (reportes:ingresos — ADMIN, PASTOR, TESORERO)
+      parameters:
+        - { name: desde, in: query, schema: { type: string, format: date } }
+        - { name: hasta, in: query, schema: { type: string, format: date } }
+        - name: agrupar
+          in: query
+          schema: { type: string, enum: [dia, semana, mes, concepto, metodo], default: mes }
+        - { $ref: '#/components/parameters/Formato' }
+      responses:
+        '200': { $ref: '#/components/responses/Reporte' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }

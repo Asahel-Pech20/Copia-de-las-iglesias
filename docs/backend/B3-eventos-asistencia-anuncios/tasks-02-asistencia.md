@@ -32,4 +32,4 @@
 - **Fase:** 3 · **Tamaño:** S · **Depende de:** B3-10
 - Exportar `asistenciaService.porEvento(eventoId)` (detalle para RF-09.2), `contarRegistradas(desde, hasta)` (RF-08.3) y `participacionPorMinisterio(desde, hasta)` (RF-09.3, con B2-11).
 - **Criterios de aceptación**
-  - [ ] B4 confirma que cubren sus reportes. *(pendiente: funciones exportadas y probadas; falta la confirmación de B4)*
+  - [x] B4 confirma que cubren sus reportes. *(confirmado por B4; para la tabla de eventos del reporte por periodo B4 agregó una consulta de solo lectura en reportes.service.ts)*

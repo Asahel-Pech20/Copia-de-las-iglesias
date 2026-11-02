@@ -68,6 +68,20 @@ Los eventos `PROGRAMADO` cuya fecha ya pasó se marcan `REALIZADO` al consultarl
 
 Fechas sin hora (`?desde=2026-10-31&hasta=2026-10-31` en `/eventos` y `/asistencias`) cuentan como días completos en la zona horaria de la configuración (`eventos/eventos.fechas.ts`: `inicioDiaEnZona`, `finDiaEnZona`, `fechaEnZona`).
 
+## Donaciones, dashboard y reportes (B4)
+
+- `db:seed` también ejecuta `prisma/seed-b4.ts`: ~350 aportaciones de los últimos 12 meses (ofrendas anónimas cada domingo, diezmos, primicias, donaciones especiales y algunas anuladas). Reproducible e idempotente, como el de B2.
+- Montos siempre como string `"1500.00"`; las sumas las hace PostgreSQL sobre `NUMERIC`. Las anuladas no suman en ningún total.
+- `GET /dashboard` omite `ingresos` si el rol no tiene `donaciones:leer`. Cache de 60 s por vista que se invalida en cuanto cambia la "huella" de los datos (`dashboard.service.ts`).
+- Reportes: `?formato=json|pdf|xlsx`. Cada reporte arma un `Reporte` (`lib/exportadores/reporte.ts`) y `responderReporte()` lo devuelve como JSON o archivo adjunto (`reporte-<tipo>-<fecha>.<ext>`). El PDF admite hasta 5 000 filas.
+
+| Función | Uso |
+|---|---|
+| `donacionesService.resumenEntre(desde, hasta, agrupar)` | Totales por día, semana, mes, concepto o método (dashboard, reporte de ingresos) |
+| `donacionesService.totalDelMes(anio, mes)` | Total del mes sin anuladas |
+| `donacionesService.detalleParaReporte(desde, hasta)` | Aportaciones sin paginar |
+| `responderReporte(res, formato, reporte, ctx)` | Exportar cualquier `Reporte` a JSON, PDF o Excel |
+
 ## Crear un módulo nuevo
 
 1. Copia `src/modules/_plantilla/` a `src/modules/<modulo>/` y renombra los archivos: `<modulo>.routes.ts`, `.controller.ts`, `.service.ts`, `.schemas.ts`, `.test.ts`.
