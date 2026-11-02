@@ -11,6 +11,16 @@ import {
   type VinculoMock,
   vinculosIniciales,
 } from './datos/b2';
+import {
+  type AnuncioMock,
+  anunciosIniciales,
+  type AsistenciaMock,
+  asistenciasIniciales,
+  type EventoMock,
+  eventosIniciales,
+  type ResponsableMock,
+  responsablesIniciales,
+} from './datos/b3';
 
 // "Base de datos" en memoria de los mocks. Cada dueño agrega aquí sus colecciones (B2–B4).
 export const db = {
@@ -24,6 +34,11 @@ export const db = {
   ministerios: ministeriosIniciales(),
   vinculos: vinculosIniciales(),
   coordinaciones: coordinacionesIniciales(),
+  // F3: eventos, responsables, asistencia y anuncios
+  eventos: eventosIniciales(),
+  responsables: responsablesIniciales(),
+  asistencias: asistenciasIniciales(),
+  anuncios: anunciosIniciales(),
 } satisfies {
   usuarios: Usuario[];
   configuracion: ConfiguracionIglesia;
@@ -33,6 +48,10 @@ export const db = {
   ministerios: MinisterioMock[];
   vinculos: VinculoMock[];
   coordinaciones: CoordinacionMock[];
+  eventos: EventoMock[];
+  responsables: ResponsableMock[];
+  asistencias: AsistenciaMock[];
+  anuncios: AnuncioMock[];
 };
 
 /** Restaura los datos iniciales (se llama entre pruebas). */
@@ -45,6 +64,10 @@ export function reiniciarDb() {
   db.ministerios = ministeriosIniciales();
   db.vinculos = vinculosIniciales();
   db.coordinaciones = coordinacionesIniciales();
+  db.eventos = eventosIniciales();
+  db.responsables = responsablesIniciales();
+  db.asistencias = asistenciasIniciales();
+  db.anuncios = anunciosIniciales();
   sesionMock.cerrar();
 }
 // Sesión simulada: en el navegador sobrevive a recargas (como la cookie de refresh real)

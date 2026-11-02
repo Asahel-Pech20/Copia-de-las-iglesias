@@ -1,0 +1,67 @@
+/* FullCalendar con los tokens de diseño (AGENTS.md §4): claro y oscuro salen de las variables */
+.calendario-eventos {
+  --fc-border-color: var(--borde);
+  --fc-page-bg-color: var(--superficie);
+  --fc-neutral-bg-color: var(--superficie-suave);
+  --fc-list-event-hover-bg-color: var(--superficie-suave);
+  --fc-today-bg-color: color-mix(in srgb, var(--primario) 10%, transparent);
+  --fc-button-text-color: var(--primario-texto);
+  --fc-button-bg-color: var(--primario);
+  --fc-button-border-color: var(--primario);
+  --fc-button-hover-bg-color: color-mix(in srgb, var(--primario) 85%, black);
+  --fc-button-hover-border-color: var(--fc-button-hover-bg-color);
+  --fc-button-active-bg-color: color-mix(in srgb, var(--primario) 70%, black);
+  --fc-button-active-border-color: var(--fc-button-active-bg-color);
+  --fc-event-text-color: var(--primario-texto);
+  color: var(--texto);
+}
+
+.calendario-eventos .fc .fc-toolbar {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.calendario-eventos .fc .fc-toolbar-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* "octubre de 2026" → "Octubre de 2026" */
+.calendario-eventos .fc .fc-toolbar-title::first-letter {
+  text-transform: uppercase;
+}
+
+/* Objetivos táctiles de al menos 44 px */
+.calendario-eventos .fc .fc-button {
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  font-size: 0.875rem;
+}
+
+.calendario-eventos .fc .fc-button:focus-visible {
+  outline: 2px solid var(--anillo);
+  outline-offset: 2px;
+}
+
+.calendario-eventos .fc a {
+  color: inherit;
+}
+
+.calendario-eventos .fc .fc-event {
+  cursor: pointer;
+}
+
+.calendario-eventos .fc .fc-list-day-cushion {
+  background: var(--superficie-suave);
+}
+
+/* Vista Lista en pantallas angostas: el título ocupa el resto y hace salto de línea */
+.calendario-eventos .fc .fc-list-event-title {
+  width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.calendario-eventos .fc .fc-list-day-cushion {
+  white-space: normal;
+}

@@ -1,6 +1,8 @@
 import { format, isValid, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
+import type { PrioridadAnuncio } from '@/types/anuncios';
 import type { Rol } from '@/types/comunes';
+import type { CategoriaEvento, EstadoEvento, TipoEvento } from '@/types/eventos';
 
 // Helpers de formato de AGENTS.md §4 (UX). Todas las fechas se muestran en español.
 
@@ -56,6 +58,30 @@ export const ETIQUETAS_ROL: Record<Rol, string> = {
   SECRETARIO: 'Secretario',
   TESORERO: 'Tesorero',
   COORDINADOR: 'Coordinador',
+};
+
+// F3: eventos y anuncios
+export const ETIQUETAS_TIPO_EVENTO: Record<TipoEvento, string> = {
+  RELIGIOSO: 'Religioso',
+  ADMINISTRATIVO: 'Administrativo',
+};
+
+export const ETIQUETAS_CATEGORIA_EVENTO: Record<CategoriaEvento, string> = {
+  CULTO: 'Culto',
+  REUNION: 'Reunión',
+  ACTIVIDAD: 'Actividad',
+  OTRO: 'Otro',
+};
+
+export const ETIQUETAS_ESTADO_EVENTO: Record<EstadoEvento, string> = {
+  PROGRAMADO: 'Programado',
+  CANCELADO: 'Cancelado',
+  REALIZADO: 'Realizado',
+};
+
+export const ETIQUETAS_PRIORIDAD_ANUNCIO: Record<PrioridadAnuncio, string> = {
+  NORMAL: 'Normal',
+  IMPORTANTE: 'Importante',
 };
 
 export const DIAS_SEMANA = [
