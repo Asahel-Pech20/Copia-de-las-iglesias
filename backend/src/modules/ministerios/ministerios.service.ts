@@ -211,19 +211,24 @@ export async function vincularMiembros(id: string, miembroIds: string[], solicit
       const nombres = inactivos.map((m) => `${m.nombre} ${m.apellidos}`).join(', ');
       throw AppError.reglaNegocio(`Los miembros inactivos no se pueden vincular: ${nombres}.`);
     }
+    // Número fijo de consultas sin importar cuántos miembros se vinculen (revisión del PR #3)
     const ahora = new Date();
-    for (const miembroId of miembroIds) {
-      await tx.miembroMinisterio.upsert({
-        where: { miembroId_ministerioId: { miembroId, ministerioId: id } },
-        create: { miembroId, ministerioId: id, fechaUnion: ahora },
-        // Reactivar un vínculo cerrado empieza una nueva participación; uno activo no cambia
-        update: {},
-      });
-      await tx.miembroMinisterio.updateMany({
-        where: { miembroId, ministerioId: id, activo: false },
-        data: { activo: true, fechaUnion: ahora, fechaSalida: null },
-      });
-    }
+    const previos = await tx.miembroMinisterio.findMany({
+      where: { ministerioId: id, miembroId: { in: miembroIds } },
+      select: { miembroId: true },
+    });
+    const conVinculo = new Set(previos.map((v) => v.miembroId));
+    await tx.miembroMinisterio.createMany({
+      data: miembroIds
+        .filter((miembroId) => !conVinculo.has(miembroId))
+        .map((miembroId) => ({ miembroId, ministerioId: id, fechaUnion: ahora })),
+      skipDuplicates: true,
+    });
+    // Reactivar un vínculo cerrado empieza una nueva participación; uno activo no cambia
+    await tx.miembroMinisterio.updateMany({
+      where: { ministerioId: id, miembroId: { in: miembroIds }, activo: false },
+      data: { activo: true, fechaUnion: ahora, fechaSalida: null },
+    });
   });
   return obtener(id);
 }
@@ -245,7 +250,8 @@ export async function listarIntegrantes(id: string, query: QueryIntegrantes) {
   const where: Prisma.MiembroMinisterioWhereInput = {
     ministerioId: id,
     ...(!query.incluirHistoricos && { activo: true }),
-    ...(query.q && { miembroId: { in: await idsQueCoinciden(query.q) } }),
+    // La búsqueda se limita a los miembros de este ministerio (no a toda la congregación)
+    ...(query.q && { miembroId: { in: await idsQueCoinciden(query.q, { ministerioId: id }) } }),
   };
   const [filas, total] = await prisma.$transaction([
     prisma.miembroMinisterio.findMany({

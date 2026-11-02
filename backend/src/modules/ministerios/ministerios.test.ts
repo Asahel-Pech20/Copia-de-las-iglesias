@@ -181,6 +181,52 @@ describe('PUT /ministerios/:id/coordinadores (B2-08)', () => {
 });
 
 describe('integrantes (B2-09, B2-10)', () => {
+  it('vincula muchos miembros de una vez (consultas fijas) mezclando nuevos y reactivados', async () => {
+    const ministerio = await crearMinisterio();
+    const miembros = await Promise.all(
+      Array.from({ length: 60 }, (_, i) => crearMiembro(`Miembro${i}`)),
+    );
+    const [primero, segundo] = miembros as [(typeof miembros)[0], (typeof miembros)[0]];
+    // Uno ya activo y otro con vínculo cerrado
+    await prisma.miembroMinisterio.create({
+      data: { miembroId: primero.id, ministerioId: ministerio.id },
+    });
+    await prisma.miembroMinisterio.create({
+      data: {
+        miembroId: segundo.id,
+        ministerioId: ministerio.id,
+        activo: false,
+        fechaSalida: new Date('2025-01-01'),
+      },
+    });
+
+    const res = await api().post(`/ministerios/${ministerio.id}/miembros`, {
+      miembroIds: miembros.map((m) => m.id),
+    });
+    expect(res.status).toBe(200);
+    expect(res.body.data.totalIntegrantes).toBe(60);
+    expect(await prisma.miembroMinisterio.count()).toBe(60);
+    const reactivado = await prisma.miembroMinisterio.findUniqueOrThrow({
+      where: { miembroId_ministerioId: { miembroId: segundo.id, ministerioId: ministerio.id } },
+    });
+    expect(reactivado).toMatchObject({ activo: true, fechaSalida: null });
+  });
+
+  it('la búsqueda de integrantes solo considera a los de ese ministerio', async () => {
+    const jovenes = await crearMinisterio('Jóvenes');
+    const musica = await crearMinisterio('Música');
+    const jose = await crearMiembro('José');
+    const josue = await crearMiembro('Josué');
+    await prisma.miembroMinisterio.create({
+      data: { miembroId: jose.id, ministerioId: jovenes.id },
+    });
+    await prisma.miembroMinisterio.create({
+      data: { miembroId: josue.id, ministerioId: musica.id },
+    });
+    const res = await api().get(`/ministerios/${jovenes.id}/miembros?q=jos`);
+    expect(res.body.data.map((m: { id: string }) => m.id)).toEqual([jose.id]);
+  });
+
   it('vincula varios (repetidos ignorados), desvincula (soft) y reactiva', async () => {
     const ministerio = await crearMinisterio();
     const ana = await crearMiembro('Ana');

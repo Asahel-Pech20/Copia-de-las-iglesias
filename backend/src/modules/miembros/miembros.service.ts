@@ -5,12 +5,14 @@
  * - `existeActivo(id)` → valida responsables, asistencia y donaciones (B3, B4).
  * - `altasPorMes(desde, hasta)` → `[{ mes: 'yyyy-MM', total }]` (gráfica del dashboard, B4).
  * - `listadoParaReporte({ estado })` → todos los miembros con sus ministerios (reporte RF-09.1, B4).
- * - `idsQueCoinciden(q)` → búsqueda sin acentos ni mayúsculas (la reutiliza ministerios).
+ * - `idsQueCoinciden(q, { ministerioId? })` → búsqueda sin acentos ni mayúsculas (la reutiliza ministerios).
+ * - `hoyIglesia()` → fecha de hoy en la zona horaria configurada de la iglesia.
  */
 import { Prisma } from '../../generated/prisma/client';
-import { AppError } from '../../lib/appError';
+import { AppError, type DetalleError } from '../../lib/appError';
 import { crearMeta, ordenar, paginar } from '../../lib/paginacion';
 import { prisma } from '../../lib/prisma';
+import * as configuracionService from '../configuracion/configuracion.service';
 import type { CrearMiembro, EditarMiembro, EstadoMiembro, QueryMiembros } from './miembros.schemas';
 
 type Cliente = Prisma.TransactionClient | typeof prisma;
@@ -78,6 +80,47 @@ function aDatosBd<T extends Partial<CrearMiembro>>(datos: T) {
   };
 }
 
+// ───────── "Hoy" en la zona horaria de la iglesia ─────────
+
+/** "yyyy-MM-dd" de un instante en una zona horaria IANA (p. ej. America/Mexico_City). */
+export function fechaEnZona(instante: Date, zonaHoraria: string) {
+  // en-CA formatea como yyyy-MM-dd
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: zonaHoraria,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(instante);
+}
+
+/**
+ * Fecha de hoy según la zona horaria configurada (RF-10), no la del servidor ni UTC:
+ * a las 19:00 de México sigue siendo hoy aunque en UTC ya sea mañana (revisión del PR #3).
+ */
+export async function hoyIglesia() {
+  const { zonaHoraria } = await configuracionService.obtener();
+  return fechaEnZona(new Date(), zonaHoraria);
+}
+
+/** 400 si la fecha de ingreso o de nacimiento es posterior a hoy (en la zona de la iglesia). */
+async function validarFechasNoFuturas(
+  datos: Pick<EditarMiembro, 'fechaIngreso' | 'fechaNacimiento'>,
+) {
+  if (!datos.fechaIngreso && !datos.fechaNacimiento) return;
+  const hoy = await hoyIglesia();
+  const details: DetalleError[] = [];
+  if (datos.fechaIngreso && datos.fechaIngreso > hoy) {
+    details.push({ campo: 'fechaIngreso', mensaje: 'La fecha de ingreso no puede ser futura.' });
+  }
+  if (datos.fechaNacimiento && datos.fechaNacimiento > hoy) {
+    details.push({
+      campo: 'fechaNacimiento',
+      mensaje: 'La fecha de nacimiento no puede ser futura.',
+    });
+  }
+  if (details.length > 0) throw AppError.validacion('Los datos enviados no son válidos.', details);
+}
+
 // ───────── Búsqueda sin acentos ─────────
 
 /** Minúsculas y sin acentos (á→a, ñ→n), igual que el translate de condicionSinAcentos. */
@@ -102,12 +145,21 @@ export function condicionSinAcentos(expresion: Prisma.Sql, q: string): Prisma.Sq
   return Prisma.join(condiciones, ' AND ');
 }
 
-/** Ids de miembros cuyo "nombre apellidos" coincide con `q` ("jose" encuentra "José"). */
-export async function idsQueCoinciden(q: string, cliente: Cliente = prisma): Promise<string[]> {
+/**
+ * Ids de miembros cuyo "nombre apellidos" coincide con `q` ("jose" encuentra "José").
+ * Con `ministerioId` solo busca entre quienes tienen (o tuvieron) vínculo con ese ministerio.
+ */
+export async function idsQueCoinciden(
+  q: string,
+  { ministerioId }: { ministerioId?: string } = {},
+): Promise<string[]> {
   const condicion = condicionSinAcentos(Prisma.sql`nombre || ' ' || apellidos`, q);
   if (!condicion) return [];
-  const filas = await cliente.$queryRaw<{ id: string }[]>`
-    SELECT id FROM miembros WHERE ${condicion}`;
+  const alcance = ministerioId
+    ? Prisma.sql`AND id IN (SELECT "miembroId" FROM miembro_ministerios WHERE "ministerioId" = ${ministerioId})`
+    : Prisma.empty;
+  const filas = await prisma.$queryRaw<{ id: string }[]>`
+    SELECT id FROM miembros WHERE ${condicion} ${alcance}`;
   return filas.map((f) => f.id);
 }
 
@@ -117,40 +169,74 @@ function whereEstado(estado: FiltroEstado): Prisma.MiembroWhereInput {
 
 // ───────── CRUD ─────────
 
+// Columnas permitidas en ?orden= (identificadores fijos: nunca texto del usuario en el SQL)
+const COLUMNAS_ORDEN = {
+  nombre: Prisma.raw('m."nombre"'),
+  apellidos: Prisma.raw('m."apellidos"'),
+  fechaIngreso: Prisma.raw('m."fechaIngreso"'),
+  createdAt: Prisma.raw('m."createdAt"'),
+} as const;
+type ColumnaOrden = keyof typeof COLUMNAS_ORDEN;
+
+/**
+ * Filtra, ordena y pagina en SQL (búsqueda sin acentos incluida), así solo se leen los ids
+ * de la página pedida aunque coincidan miles de miembros (revisión del PR #3).
+ */
 export async function listar(query: QueryMiembros) {
   const { page, limit, skip, take } = paginar(query);
-  const where: Prisma.MiembroWhereInput = {
-    ...whereEstado(query.estado),
-    ...(query.q && { id: { in: await idsQueCoinciden(query.q) } }),
-    ...(query.ministerioId && {
-      ministerios: { some: { ministerioId: query.ministerioId, activo: true } },
-    }),
-  };
-  const orden = ordenar(query.orden, ['nombre', 'apellidos', 'fechaIngreso', 'createdAt'], {
+  const condiciones: Prisma.Sql[] = [];
+  if (query.estado !== 'todos')
+    condiciones.push(Prisma.sql`m."activo" = ${query.estado === 'activo'}`);
+  if (query.ministerioId) {
+    condiciones.push(Prisma.sql`EXISTS (
+      SELECT 1 FROM miembro_ministerios mm
+      WHERE mm."miembroId" = m.id AND mm."ministerioId" = ${query.ministerioId} AND mm."activo")`);
+  }
+  if (query.q) {
+    condiciones.push(
+      condicionSinAcentos(Prisma.sql`m."nombre" || ' ' || m."apellidos"`, query.q) ??
+        Prisma.sql`FALSE`,
+    );
+  }
+  const where = condiciones.length
+    ? Prisma.sql`WHERE ${Prisma.join(condiciones, ' AND ')}`
+    : Prisma.empty;
+
+  const orden = ordenar(query.orden, Object.keys(COLUMNAS_ORDEN) as ColumnaOrden[], {
     apellidos: 'asc',
   });
-  // Desempate estable: apellidos → nombre → id
-  const orderBy: Prisma.MiembroOrderByWithRelationInput[] = [
-    orden,
-    { nombre: 'asc' },
-    { id: 'asc' },
-  ];
-  const [filas, total] = await prisma.$transaction([
-    prisma.miembro.findMany({
-      where,
-      orderBy,
-      skip,
-      take,
-      select: { ...SELECT_MIEMBRO, ministerios: MINISTERIOS_ACTIVOS },
-    }),
-    prisma.miembro.count({ where }),
+  const [campo, direccion] = Object.entries(orden)[0] as [ColumnaOrden, 'asc' | 'desc'];
+  const sentido = Prisma.raw(direccion === 'desc' ? 'DESC' : 'ASC');
+
+  const [pagina, conteo] = await Promise.all([
+    // Desempate estable: columna elegida → nombre → id
+    prisma.$queryRaw<{ id: string }[]>`
+      SELECT m.id FROM miembros m ${where}
+      ORDER BY ${COLUMNAS_ORDEN[campo]} ${sentido}, m."nombre" ASC, m.id ASC
+      LIMIT ${take} OFFSET ${skip}`,
+    prisma.$queryRaw<{ total: bigint }[]>`SELECT count(*) AS total FROM miembros m ${where}`,
   ]);
-  const datos = filas.map(({ ministerios, ...m }) => ({
-    ...formatear(m),
-    ministerios: ministerios.map((v) => v.ministerio),
-    totalMinisterios: ministerios.length,
-  }));
-  return { datos, meta: crearMeta(total, page, limit) };
+
+  const ids = pagina.map((f) => f.id);
+  const filas = await prisma.miembro.findMany({
+    where: { id: { in: ids } },
+    select: { ...SELECT_MIEMBRO, ministerios: MINISTERIOS_ACTIVOS },
+  });
+  const porId = new Map(filas.map((f) => [f.id, f]));
+  // Se respeta el orden calculado en SQL
+  const datos = ids.flatMap((id) => {
+    const fila = porId.get(id);
+    if (!fila) return [];
+    const { ministerios, ...m } = fila;
+    return [
+      {
+        ...formatear(m),
+        ministerios: ministerios.map((v) => v.ministerio),
+        totalMinisterios: ministerios.length,
+      },
+    ];
+  });
+  return { datos, meta: crearMeta(Number(conteo[0]?.total ?? 0), page, limit) };
 }
 
 export async function obtener(id: string) {
@@ -192,6 +278,7 @@ async function buscarDuplicado(nombre: string, apellidos: string, exceptoId?: st
 
 /** Crea el miembro. Si ya hay otro con el mismo nombre, lo indica en `duplicado` (advertencia, no error). */
 export async function crear(datos: CrearMiembro) {
+  await validarFechasNoFuturas(datos);
   const duplicado = await buscarDuplicado(datos.nombre, datos.apellidos);
   const miembro = await prisma.miembro.create({ data: aDatosBd(datos), select: SELECT_MIEMBRO });
   return { miembro: formatear(miembro), duplicadoId: duplicado?.id ?? null };
@@ -208,6 +295,7 @@ async function verificarExiste(id: string, cliente: Cliente = prisma) {
 
 export async function editar(id: string, datos: EditarMiembro) {
   await verificarExiste(id);
+  await validarFechasNoFuturas(datos);
   const miembro = await prisma.miembro.update({
     where: { id },
     data: aDatosBd(datos),
@@ -221,6 +309,7 @@ export async function editar(id: string, datos: EditarMiembro) {
  * al reactivar limpia la baja (los vínculos no se restauran). Asistencias y donaciones se conservan.
  */
 export async function cambiarEstado(id: string, { activo, motivo }: EstadoMiembro) {
+  const hoy = await hoyIglesia();
   return prisma.$transaction(async (tx) => {
     const actual = await verificarExiste(id, tx);
     if (actual.activo === activo) {
@@ -241,7 +330,7 @@ export async function cambiarEstado(id: string, { activo, motivo }: EstadoMiembr
         ? { activo, fechaBaja: null, motivoBaja: null }
         : {
             activo,
-            fechaBaja: aFechaBd(ahora.toISOString().slice(0, 10)),
+            fechaBaja: aFechaBd(hoy),
             motivoBaja: motivo ?? null,
           },
       select: SELECT_MIEMBRO,
