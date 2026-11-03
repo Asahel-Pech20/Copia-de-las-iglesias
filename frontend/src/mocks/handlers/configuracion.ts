@@ -1,5 +1,9 @@
 import { http, HttpResponse } from 'msw';
-import type { EditarConfiguracion, GuardarHorario, HorarioReunion } from '@/types/configuracion';
+import type {
+  EditarConfiguracion,
+  GuardarHorario,
+  HorarioReunion,
+} from '@/app/tipos/configuracion';
 import { db } from '../db';
 import { autenticar, errorApi, ruta } from '../utils';
 

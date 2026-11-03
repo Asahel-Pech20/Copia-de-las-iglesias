@@ -1,0 +1,39 @@
+.estado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 16px;
+  text-align: center;
+}
+.titulo {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+.descripcion {
+  margin: 0;
+  max-width: 24rem;
+}
+.esqueleto {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+.fila-esqueleto {
+  display: flex;
+  gap: 16px;
+}
+.bloque {
+  flex: 1;
+  height: 20px;
+  border-radius: 8px;
+  background: var(--superficie-suave);
+  animation: pulso 1.5s ease-in-out infinite;
+}
+@keyframes pulso {
+  50% {
+    opacity: 0.5;
+  }
+}

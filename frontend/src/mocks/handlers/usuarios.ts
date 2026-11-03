@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw';
-import type { Rol } from '@/types/comunes';
-import type { CrearUsuario, Usuario } from '@/types/usuarios';
+import type { Rol } from '@/app/tipos/comunes';
+import type { CrearUsuario, Usuario } from '@/app/tipos/usuarios';
 import { db } from '../db';
 import { ahora, autenticar, errorApi, paginarMock, ruta } from '../utils';
 

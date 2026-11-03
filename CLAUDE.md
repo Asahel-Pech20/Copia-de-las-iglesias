@@ -13,7 +13,7 @@ Aplicación web de administración interna de una iglesia (proyecto de la materi
 
 ## Stack (resumen)
 - **Backend**: Node 22 + Express 5 + TypeScript + Prisma + PostgreSQL 16 + Zod + JWT. Pruebas: Vitest + Supertest.
-- **Frontend**: React 19 + Vite + TypeScript + Tailwind + shadcn/ui + TanStack Query + React Hook Form + FullCalendar + Recharts. Mocks: MSW.
+- **Frontend**: **Angular 21** + TypeScript + Angular Material + Reactive Forms + signals (`rxResource`) + lucide-angular. Mocks: handlers de MSW vía interceptor HTTP. Migración desde React en curso: F1 y F2 listos; F3 y F4 pendientes ([docs/migracion-angular.md](docs/migracion-angular.md)).
 - **Monorepo** pnpm: `backend/`, `frontend/`, `docs/`. Docker: postgres, postgres-test, mailpit.
 
 ## Arnés de IA
@@ -56,7 +56,7 @@ Auditorías: `Auditorias/Auditoria_<n>/README.md` (índice) → `<Integrante>/{b
 - Asistencia ligada a un **evento** (no a una fecha suelta); no se registra en eventos cancelados.
 - Respuestas: `{ data, meta? }` / `{ error: { code, message, details? } }`.
 - Configuración de la iglesia = fila única (`id = 1`); define moneda (default MXN) y zona horaria (default America/Mexico_City).
-- Frontend arranca con MSW (`VITE_USE_MOCKS=true`) para no depender del backend.
+- Frontend arranca con mocks (`environment.usarMocks = true` en `src/environments/environment.ts`) para no depender del backend.
 
 ## Decisiones
 | Fecha | Decisión |
@@ -75,9 +75,11 @@ Auditorías: `Auditorias/Auditoria_<n>/README.md` (índice) → `<Integrante>/{b
 | 2026-10-31 | Permisos del coordinador con sufijo `-propio` (`specs.md §3`); se usan con `autorizarAlguno` + `esCoordinadorDe`. |
 | 2026-10-31 | B2: búsqueda de miembros sin acentos con `translate(lower(...))` en SQL (sin extensión `unaccent`, sin cambiar el schema). Seed B2 sin `@faker-js/faker` (generador con semilla fija) para no agregar dependencias. `POST /miembros` advierte duplicados en `meta: { posibleDuplicado, duplicadoId }`. |
 | 2026-10-31 | B3: los eventos `PROGRAMADO` cuya fecha pasó se marcan `REALIZADO` al consultarlos (sin `node-cron`, sin dependencias nuevas). Pase de lista con un solo `INSERT … ON CONFLICT` en transacción. Fechas sin hora (`desde`/`hasta` de eventos e historial, resumen) son días completos en la zona horaria de la configuración, no en UTC (`eventos/eventos.fechas.ts`; mismo criterio de la revisión del PR #3). F3: FullCalendar 6.1 y Recharts (ya previstos en `specs.md §4`); markdown simple de anuncios renderizado sin `dangerouslySetInnerHTML`. |
+| 2026-11-03 | Frontend migrado a **Angular 21** (los cursos anteriores usaban Express + Angular; React se eligió por descuido). Angular Material con los tokens de AGENTS.md §4; mocks de MSW sin Service Worker (interceptor `src/mocks/interceptor.ts`, fuera del bundle de producción). Angular 21 y no 22 porque 22 pide Node ≥ 24.15. |
 | 2026-11-02 | B4: `pdfkit` 0.20 y `exceljs` 4.4 (previstos en `specs.md §4`). PDF con Helvetica estándar (WinAnsi cubre acentos y ñ), máx. 5 000 filas (más → 422, usar Excel). La cache del dashboard se invalida con una "huella" de los datos (conteos y `max(updatedAt)`), sin tocar los módulos de B2/B3. Los reportes leen de los services dueños; solo la tabla de eventos del reporte por periodo y el % por integrante son consultas de solo lectura propias de `reportes.service.ts`. |
 
 ## Estado actual
+- **Copia en Angular** (repo `Asahel-Pech20/Copia-de-las-iglesias`, 2026-11-03): frontend de F1 (base, auth, usuarios, configuración) y F2 (miembros, ministerios, `SelectorMiembros`) reescrito en Angular 21 + Material; backend sin cambios. 27 pruebas de frontend (Vitest), lint, typecheck, formato y `ng build` en verde. Eventos, asistencia, anuncios, donaciones, dashboard y reportes (F3/F4) aparecen en el menú como «pendiente».
 - **B1 y F1 completos** (rama `feat/B1-F1-base`, PR [Surer46/IglesyApp#1](https://github.com/Surer46/IglesyApp/pull/1), fusionado en `develop` y `main`). Backend: 152 pruebas; frontend: 85. Probado de punta a punta: login real, sesión al recargar, invitación por Mailpit, logo servido desde el backend, Swagger.
 - Criterios de B1 aún abiertos: revisión del schema por B3/B4 (B2 la hizo: sus modelos funcionan sin cambios), `prisma studio` sin verificar.
 - **Ya desbloqueado para el equipo:** `autenticar`, `autorizar`, `autorizarAlguno`, `esCoordinadorDe` (`middlewares/auth.ts`), `validar`, `AppError`, paginación, plantilla `modules/_plantilla/`, `loginComo(rol)` para pruebas, componentes de `components/comunes` y MSW. Guía: `backend/README.md`.
@@ -94,7 +96,7 @@ Auditorías: `Auditorias/Auditoria_<n>/README.md` (índice) → `<Integrante>/{b
 
 ### Cómo levantar todo
 1. `docker compose up -d` · 2. `cp backend/.env.example backend/.env` (una vez) · 3. `pnpm install` · 4. `pnpm --filter backend db:deploy` y `db:seed` · 5. `pnpm dev`.
-- El frontend usa MSW por defecto en desarrollo; para usar el backend real: `frontend/.env` con `VITE_USE_MOCKS=false`.
+- El frontend usa mocks por defecto en desarrollo; para usar el backend real: `usarMocks: false` en `frontend/src/environments/environment.ts`.
 - Usuarios: `<rol>@iglesia.local` / `SEED_PASSWORD` (backend real) o `Iglesia123` (mocks, `frontend/src/mocks/datos/b1.ts`).
 
 ## Pendientes / preguntas abiertas

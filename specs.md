@@ -171,18 +171,18 @@ Leyenda: **C** crear · **L** leer · **E** editar · **D** desactivar/cancelar/
 ### Frontend
 | Área | Tecnología |
 |---|---|
-| Framework | React 19 + Vite |
+| Framework | Angular 21 (componentes standalone, signals, control flow `@if`/`@for`) |
 | Lenguaje | TypeScript (modo `strict`) |
-| Enrutamiento | React Router |
-| Estado servidor | TanStack Query |
-| Formularios | React Hook Form + Zod |
-| Estilos / UI | Tailwind CSS + shadcn/ui (Radix) + lucide-react |
-| HTTP | Axios (interceptor de token / refresh) |
-| Calendario | FullCalendar (`@fullcalendar/react`) |
-| Gráficas | Recharts |
+| Enrutamiento | Angular Router (guards `rutaProtegida`, `cambiosSinGuardar`) |
+| Estado servidor | Servicios + `rxResource` (signals) |
+| Formularios | Reactive Forms con validadores propios (`core/validadores.ts`) |
+| Estilos / UI | Angular Material (CDK) + tokens CSS de AGENTS.md §4 + lucide-angular |
+| HTTP | HttpClient (interceptor de token / refresh, `core/api.ts`) |
+| Calendario | FullCalendar (`@fullcalendar/angular`) — pendiente F3 |
+| Gráficas | por definir en F4 (Recharts es solo de React) |
 | Fechas | date-fns (locale `es`) |
-| Mocks durante desarrollo | MSW (Mock Service Worker) |
-| Pruebas | Vitest + React Testing Library |
+| Mocks durante desarrollo | Handlers de MSW ejecutados por un interceptor HTTP (sin Service Worker) |
+| Pruebas | Vitest (`ng test`) + TestBed + RouterTestingHarness |
 | Calidad | ESLint + Prettier |
 
 ### Infraestructura / herramientas

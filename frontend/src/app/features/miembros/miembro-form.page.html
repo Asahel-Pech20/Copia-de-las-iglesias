@@ -1,0 +1,69 @@
+<app-page-header
+  [titulo]="titulo()"
+  [descripcion]="miembro() ? miembro()!.nombre + ' ' + miembro()!.apellidos : undefined"
+>
+  <a matButton="outlined" [routerLink]="volver()">
+    <lucide-icon [img]="iconoVolver" [size]="16" aria-hidden="true" /> Volver
+  </a>
+</app-page-header>
+
+<section class="tarjeta">
+  @if (id() && consulta.isLoading()) {
+    <app-esqueleto [filas]="4" [columnas]="2" />
+  } @else if (id() && consulta.error()) {
+    <app-estado-error [error]="consulta.error()" (reintentar)="consulta.reload()" />
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="enviar()" novalidate class="rejilla">
+      @if (errorGeneral()) {
+        <p class="alerta alerta-peligro doble" role="alert">{{ errorGeneral() }}</p>
+      }
+      <mat-form-field>
+        <mat-label>Nombre</mat-label>
+        <input matInput autocomplete="off" formControlName="nombre" required />
+        <mat-error>{{ error('nombre') }}</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Apellidos</mat-label>
+        <input matInput autocomplete="off" formControlName="apellidos" required />
+        <mat-error>{{ error('apellidos') }}</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Teléfono</mat-label>
+        <input matInput type="tel" autocomplete="off" formControlName="telefono" />
+        <mat-hint>De 7 a 15 dígitos. Puedes usar +, espacios y guiones.</mat-hint>
+        <mat-error>{{ error('telefono') }}</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Correo</mat-label>
+        <input matInput type="email" autocomplete="off" formControlName="email" />
+        <mat-error>{{ error('email') }}</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Fecha de ingreso</mat-label>
+        <input matInput type="date" formControlName="fechaIngreso" required />
+        <mat-error>{{ error('fechaIngreso') }}</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Fecha de nacimiento</mat-label>
+        <input matInput type="date" formControlName="fechaNacimiento" />
+        <mat-error>{{ error('fechaNacimiento') }}</mat-error>
+      </mat-form-field>
+      <mat-form-field class="doble">
+        <mat-label>Dirección</mat-label>
+        <input matInput autocomplete="off" formControlName="direccion" />
+        <mat-error>{{ error('direccion') }}</mat-error>
+      </mat-form-field>
+      <mat-form-field class="doble">
+        <mat-label>Notas</mat-label>
+        <textarea matInput rows="3" formControlName="notas"></textarea>
+        <mat-error>{{ error('notas') }}</mat-error>
+      </mat-form-field>
+      <div class="botones doble">
+        <a matButton="outlined" [routerLink]="volver()">Cancelar</a>
+        <button matButton="filled" type="submit" [disabled]="enviando()">
+          {{ enviando() ? 'Guardando…' : 'Guardar' }}
+        </button>
+      </div>
+    </form>
+  }
+</section>

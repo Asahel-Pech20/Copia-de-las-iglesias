@@ -1,0 +1,170 @@
+@if (consulta.isLoading() && !consulta.hasValue()) {
+  <section class="tarjeta"><app-esqueleto [filas]="4" [columnas]="3" /></section>
+} @else if (consulta.error()) {
+  <section class="tarjeta">
+    <app-estado-error [error]="consulta.error()" (reintentar)="consulta.reload()" />
+  </section>
+} @else if (consulta.value(); as ministerio) {
+  <div class="encabezado">
+    <div>
+      <h1>{{ ministerio.nombre }}</h1>
+      <app-badge-estado [activo]="ministerio.activo" />
+    </div>
+    <div class="acciones">
+      <a matButton="outlined" routerLink="/ministerios">
+        <lucide-icon [img]="iconos.ArrowLeft" [size]="16" aria-hidden="true" /> Ministerios
+      </a>
+      <button
+        *appPuede="'ministerios:editar'"
+        matButton="outlined"
+        type="button"
+        (click)="editar(ministerio)"
+      >
+        <lucide-icon [img]="iconos.Pencil" [size]="16" aria-hidden="true" /> Editar
+      </button>
+      <button
+        *appPuede="'ministerios:eliminar'"
+        matButton="filled"
+        type="button"
+        [class.boton-peligro]="ministerio.activo"
+        (click)="cambiarEstado(ministerio)"
+      >
+        <lucide-icon [img]="iconos.Power" [size]="16" aria-hidden="true" />
+        {{ ministerio.activo ? 'Desactivar' : 'Reactivar' }}
+      </button>
+    </div>
+  </div>
+
+  <section class="tarjeta tarjeta-cuerpo resumen">
+    <div>
+      <p class="texto-suave">{{ ministerio.descripcion ?? 'Sin descripción.' }}</p>
+      <p class="coordinacion"><strong>Coordinación: </strong>{{ coordinacion(ministerio) }}</p>
+      <p class="texto-suave">
+        {{ ministerio.totalIntegrantes }}
+        {{ ministerio.totalIntegrantes === 1 ? 'integrante' : 'integrantes' }}
+      </p>
+    </div>
+    <!-- Solo ADMIN y PASTOR asignan coordinadores -->
+    <button
+      *appPuede="'ministerios:editar'"
+      matButton="outlined"
+      type="button"
+      (click)="editarCoordinadores(ministerio)"
+    >
+      <lucide-icon [img]="iconos.UserCog" [size]="16" aria-hidden="true" /> Editar coordinadores
+    </button>
+  </section>
+
+  <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false">
+    <mat-tab label="Integrantes">
+      <div class="pestana">
+        <div class="barra" role="search">
+          <div class="izquierda">
+            <app-campo-busqueda
+              [valor]="q()"
+              placeholder="Buscar integrante"
+              (cambio)="buscar($event)"
+            />
+            <mat-slide-toggle [checked]="historicos()" (change)="verHistoricos($event.checked)">
+              Ver históricos
+            </mat-slide-toggle>
+          </div>
+          @if (puedeGestionar() && ministerio.activo) {
+            <button matButton="filled" type="button" (click)="agregarIntegrantes(ministerio)">
+              <lucide-icon [img]="iconos.UserPlus" [size]="16" aria-hidden="true" /> Agregar
+              integrantes
+            </button>
+          }
+        </div>
+
+        <section class="tarjeta">
+          @if (integrantes.isLoading() && !integrantes.hasValue()) {
+            <app-esqueleto [columnas]="4" />
+          } @else if (integrantes.error()) {
+            <app-estado-error [error]="integrantes.error()" (reintentar)="integrantes.reload()" />
+          } @else if (filas().length === 0) {
+            <app-estado-vacio
+              [icono]="iconos.Users"
+              [titulo]="
+                q()
+                  ? 'Ningún integrante coincide con la búsqueda'
+                  : 'Este ministerio aún no tiene integrantes'
+              "
+            >
+              @if (!q() && puedeGestionar() && ministerio.activo) {
+                <button matButton="filled" type="button" (click)="agregarIntegrantes(ministerio)">
+                  <lucide-icon [img]="iconos.UserPlus" [size]="16" aria-hidden="true" /> Agregar
+                  integrantes
+                </button>
+              }
+            </app-estado-vacio>
+          } @else {
+            <div class="contenedor-tabla">
+              <table mat-table [dataSource]="filas()" aria-label="Integrantes">
+                <ng-container matColumnDef="nombre">
+                  <th mat-header-cell *matHeaderCellDef>Nombre</th>
+                  <td mat-cell *matCellDef="let i">
+                    <a [routerLink]="['/miembros', i.id]" class="fuerte"
+                      >{{ i.nombre }} {{ i.apellidos }}</a
+                    >
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="telefono">
+                  <th mat-header-cell *matHeaderCellDef>Teléfono</th>
+                  <td mat-cell *matCellDef="let i">{{ i.telefono ?? '—' }}</td>
+                </ng-container>
+                <ng-container matColumnDef="fechaUnion">
+                  <th mat-header-cell *matHeaderCellDef>Se unió</th>
+                  <td mat-cell *matCellDef="let i">{{ fecha(i.fechaUnion) }}</td>
+                </ng-container>
+                <ng-container matColumnDef="estado">
+                  <th mat-header-cell *matHeaderCellDef>Estado</th>
+                  <td mat-cell *matCellDef="let i">
+                    @if (i.activo) {
+                      <app-badge-estado [activo]="true" />
+                    } @else {
+                      <app-badge-estado
+                        variante="neutro"
+                        [etiqueta]="'Salió el ' + fecha(i.fechaSalida)"
+                      />
+                    }
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="acciones">
+                  <th mat-header-cell *matHeaderCellDef><span class="sr-only">Acciones</span></th>
+                  <td mat-cell *matCellDef="let i" class="acciones">
+                    @if (i.activo) {
+                      <button
+                        matButton
+                        type="button"
+                        (click)="quitar(ministerio, i)"
+                        [attr.aria-label]="'Quitar a ' + i.nombre + ' ' + i.apellidos"
+                      >
+                        <lucide-icon [img]="iconos.UserMinus" [size]="16" aria-hidden="true" />
+                        Quitar
+                      </button>
+                    }
+                  </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="columnas()"></tr>
+                <tr mat-row *matRowDef="let fila; columns: columnas()"></tr>
+              </table>
+            </div>
+            <app-paginacion [meta]="integrantes.value()!.meta" (cambio)="pagina.set($event)" />
+          }
+        </section>
+      </div>
+    </mat-tab>
+
+    <!-- F2-11: se conecta con la lista de eventos cuando F3 se migre a Angular -->
+    <mat-tab label="Actividades">
+      <section class="tarjeta pestana">
+        <app-estado-vacio
+          [icono]="iconos.CalendarDays"
+          titulo="Actividades programadas"
+          descripcion="Aquí se mostrarán los próximos eventos y los pasados de este ministerio cuando el módulo de eventos esté disponible."
+        />
+      </section>
+    </mat-tab>
+  </mat-tab-group>
+}

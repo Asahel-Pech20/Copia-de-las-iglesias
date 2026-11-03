@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw';
-import { PERMISOS_POR_ROL } from '@/lib/permisos';
-import type { Usuario } from '@/types/usuarios';
+import { PERMISOS_POR_ROL } from '@/app/core/permisos';
+import type { Usuario } from '@/app/tipos/usuarios';
 import { PASSWORD_MOCK } from '../datos/b1';
 import { db, sesionMock } from '../db';
 import { ahora, autenticar, errorApi, PREFIJO_TOKEN, ruta } from '../utils';

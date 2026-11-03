@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
-import { tienePermiso } from '@/lib/permisos';
-import type { Usuario } from '@/types/usuarios';
-import type { CrearMinisterio, Ministerio } from '@/types/ministerios';
+import { tienePermiso } from '@/app/core/permisos';
+import type { Usuario } from '@/app/tipos/usuarios';
+import type { CrearMinisterio, Ministerio } from '@/app/tipos/ministerios';
 import type { MinisterioMock } from '../datos/b2';
 import { db } from '../db';
 import { ahora, autenticar, errorApi, paginarMock, ruta } from '../utils';

@@ -1,0 +1,109 @@
+<app-page-header titulo="Usuarios" descripcion="Personal con acceso al sistema.">
+  <button *appPuede="'usuarios:crear'" matButton="filled" type="button" (click)="abrirFormulario()">
+    <lucide-icon [img]="iconos.Plus" [size]="16" aria-hidden="true" /> Nuevo usuario
+  </button>
+</app-page-header>
+
+<div class="filtros" role="search">
+  <app-campo-busqueda
+    [valor]="filtros.valores().q"
+    placeholder="Buscar por nombre o correo"
+    (cambio)="filtros.cambiar({ q: $event })"
+  />
+  <mat-form-field subscriptSizing="dynamic" class="select-filtro">
+    <mat-label>Rol</mat-label>
+    <mat-select [value]="filtros.valores().rol" (valueChange)="filtros.cambiar({ rol: $event })">
+      @for (o of opcionesRol; track o.valor) {
+        <mat-option [value]="o.valor">{{ o.etiqueta }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field subscriptSizing="dynamic" class="select-filtro">
+    <mat-label>Estado</mat-label>
+    <mat-select
+      [value]="filtros.valores().estado"
+      (valueChange)="filtros.cambiar({ estado: $event })"
+    >
+      @for (o of opcionesEstado; track o.valor) {
+        <mat-option [value]="o.valor">{{ o.etiqueta }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+</div>
+
+<section class="tarjeta">
+  @if (consulta.isLoading() && !consulta.hasValue()) {
+    <app-esqueleto [columnas]="5" />
+  } @else if (consulta.error()) {
+    <app-estado-error [error]="consulta.error()" (reintentar)="consulta.reload()" />
+  } @else if (filas().length === 0) {
+    <app-estado-vacio
+      [icono]="iconos.Users"
+      titulo="No hay usuarios con estos filtros"
+      descripcion="Prueba con otra búsqueda o crea un usuario nuevo."
+    />
+  } @else {
+    <div class="contenedor-tabla">
+      <table mat-table [dataSource]="filas()" aria-label="Usuarios">
+        <ng-container matColumnDef="nombre">
+          <th mat-header-cell *matHeaderCellDef>Nombre</th>
+          <td mat-cell *matCellDef="let u" class="fuerte">{{ u.nombre }}</td>
+        </ng-container>
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef>Correo</th>
+          <td mat-cell *matCellDef="let u">{{ u.email }}</td>
+        </ng-container>
+        <ng-container matColumnDef="rol">
+          <th mat-header-cell *matHeaderCellDef>Rol</th>
+          <td mat-cell *matCellDef="let u">{{ etiquetaRol(u) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="activo">
+          <th mat-header-cell *matHeaderCellDef>Estado</th>
+          <td mat-cell *matCellDef="let u"><app-badge-estado [activo]="u.activo" /></td>
+        </ng-container>
+        <ng-container matColumnDef="ultimoAcceso">
+          <th mat-header-cell *matHeaderCellDef>Último acceso</th>
+          <td mat-cell *matCellDef="let u">{{ fechaHora(u.ultimoAcceso) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="acciones">
+          <th mat-header-cell *matHeaderCellDef><span class="sr-only">Acciones</span></th>
+          <td mat-cell *matCellDef="let u" class="acciones">
+            <button
+              matIconButton
+              type="button"
+              [matMenuTriggerFor]="menu"
+              [attr.aria-label]="'Acciones de ' + u.nombre"
+            >
+              <lucide-icon [img]="iconos.MoreHorizontal" [size]="18" aria-hidden="true" />
+            </button>
+            <mat-menu #menu="matMenu" xPosition="before">
+              <button mat-menu-item type="button" (click)="abrirFormulario(u)">
+                <lucide-icon [img]="iconos.Pencil" [size]="16" aria-hidden="true" /> Editar
+              </button>
+              @if (!u.ultimoAcceso && u.activo) {
+                <button mat-menu-item type="button" (click)="reenviar(u)">
+                  <lucide-icon [img]="iconos.Send" [size]="16" aria-hidden="true" /> Reenviar
+                  invitación
+                </button>
+              }
+              @if (u.activo) {
+                @if (u.id !== yo()?.id) {
+                  <button mat-menu-item type="button" class="texto-peligro" (click)="desactivar(u)">
+                    <lucide-icon [img]="iconos.UserX" [size]="16" aria-hidden="true" /> Desactivar
+                  </button>
+                }
+              } @else {
+                <button mat-menu-item type="button" (click)="activar(u)">
+                  <lucide-icon [img]="iconos.UserCheck" [size]="16" aria-hidden="true" /> Activar
+                </button>
+              }
+            </mat-menu>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+        <tr mat-row *matRowDef="let fila; columns: columnas"></tr>
+      </table>
+    </div>
+    <app-paginacion [meta]="consulta.value()!.meta" (cambio)="filtros.cambiar({ page: $event })" />
+  }
+</section>

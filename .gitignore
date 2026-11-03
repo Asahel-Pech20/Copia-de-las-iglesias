@@ -14,3 +14,5 @@ Thumbs.db
 .claude/settings.local.json
 backend/src/generated/
 backend/uploads-test/
+.angular/
+out-tsc/

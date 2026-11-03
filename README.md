@@ -1,4 +1,6 @@
-# AppIglesia
+# AppIglesia (frontend en Angular)
+
+> Copia del proyecto con el **frontend reescrito en Angular 21**. Migrados: F1 (base, sesión, usuarios, configuración) y F2 (miembros y ministerios). Pendientes: F3 y F4. Detalle en [docs/migracion-angular.md](docs/migracion-angular.md).
 
 Aplicación web para la administración interna de una iglesia: usuarios con roles, miembros, asistencia, eventos, ministerios, donaciones, anuncios, dashboard, reportes y configuración institucional.
 
@@ -44,7 +46,7 @@ Mailpit (correos de prueba): <http://localhost:8025>
 .
 ├── .claude/              # arnés de Claude Code (permisos, hooks, comando /tarea)
 ├── backend/              # API Express + Prisma (ver backend/README.md)
-├── frontend/             # React + Vite (MSW en desarrollo)
+├── frontend/             # Angular 21 + Material (mocks en desarrollo)
 ├── docs/                 # planes y tareas por subsección
 ├── docker-compose.yml    # servicios de desarrollo
 ├── eslint.config.js      # ESLint compartido

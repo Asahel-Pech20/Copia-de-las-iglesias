@@ -30,7 +30,7 @@
 | Enums (valores) | `UPPER_SNAKE_CASE` | `DONACION_ESPECIAL` |
 | Constantes | `UPPER_SNAKE_CASE` | `MAX_LIMIT` |
 | Archivos backend | `<modulo>.<capa>.ts` | `miembros.service.ts` |
-| Archivos React | Componente `PascalCase.tsx`, resto `camelCase.ts` | `MiembrosPage.tsx`, `api.ts` |
+| Archivos Angular | `kebab-case` con sufijo de tipo | `miembros.page.ts`, `miembros.service.ts`, `usuario-form.dialogo.ts` |
 | Tablas BD | Modelo Prisma `PascalCase`, `@@map` a `snake_case` plural | `Miembro` → `miembros` |
 | Textos de UI y mensajes de error | Español neutro, con acentos | "El correo ya está registrado." |
 | Comentarios de código | Español, breves, solo cuando aportan | |
@@ -78,12 +78,12 @@
 ## 4. Reglas de frontend
 
 ### Arquitectura
-- Una carpeta por módulo en `src/features/<modulo>/` con `api.ts` (llamadas Axios), `hooks.ts` (TanStack Query), `schemas.ts` (Zod), `pages/`, `components/`.
-- Las páginas **no** llaman a Axios directamente: usan hooks (`useMiembros`, `useCrearMiembro`).
+- Una carpeta por módulo en `src/app/features/<modulo>/` con `<modulo>.service.ts` (llamadas al API), páginas `*.page.ts` y diálogos/componentes.
+- Las páginas **no** usan HttpClient directamente: usan el servicio del módulo (`MiembrosService`) y `rxResource` para las lecturas.
 - Query keys: `['<modulo>', 'lista', filtros]`, `['<modulo>', 'detalle', id]`. Invalidar el módulo tras cada mutación.
 - Tipos del contrato en `src/types/` (espejo exacto de `specs.md`). Prohibido `any`; usar `unknown` y estrechar.
-- Formularios: React Hook Form + `zodResolver`; mismas reglas que el esquema backend.
-- Permisos: `usePermiso('donaciones:leer')` y el componente `<Puede permiso="...">`. Las rutas protegidas usan `<RutaProtegida permiso="...">`.
+- Formularios: Reactive Forms con los validadores de `core/validadores.ts`; mismas reglas que el esquema backend.
+- Permisos: `SesionService.puede('donaciones:leer')` y la directiva `*appPuede="'...'"`. Las rutas protegidas usan `canActivate: [rutaProtegida]` con `data: { permiso }`.
 - Usar **solo** los componentes compartidos de `components/comunes` y `components/ui` (los mantiene F1). Si falta uno genérico, se pide a F1 o se agrega con su revisión.
 
 ### Diseño visual
@@ -119,11 +119,11 @@
 
 ### Accesibilidad (WCAG 2.1 AA)
 - Contraste mínimo 4.5:1. Todo input con `<label>`. Errores asociados con `aria-describedby`.
-- Navegable con teclado; foco visible; modales atrapan el foco (Radix ya lo hace).
+- Navegable con teclado; foco visible; modales atrapan el foco (Angular CDK ya lo hace).
 - Gráficas con resumen en texto o tabla alternativa.
 
 ### Pruebas
-- Cada formulario: prueba de validación y envío. Cada página de listado: render con datos mock (MSW) y estado vacío.
+- Cada formulario: prueba de validación y envío. Cada página de listado: render con datos mock y estado vacío (`src/app/prueba/entorno.ts`).
 
 ---
 

@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import type { CambiarEstadoMiembro, CrearMiembro, Miembro } from '@/types/miembros';
+import type { CambiarEstadoMiembro, CrearMiembro, Miembro } from '@/app/tipos/miembros';
 import { db } from '../db';
 import { ahora, autenticar, errorApi, paginarMock, ruta } from '../utils';
 

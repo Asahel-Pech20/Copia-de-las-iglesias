@@ -1,8 +1,6 @@
 // Configuración ESLint compartida por backend y frontend (flat config)
 import js from '@eslint/js';
 import prettier from 'eslint-config-prettier';
-import reactHooks from 'eslint-plugin-react-hooks';
-import reactRefresh from 'eslint-plugin-react-refresh';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -15,6 +13,7 @@ export default tseslint.config(
       '**/coverage',
       'backend/uploads',
       'backend/src/generated',
+      '**/.angular',
     ],
   },
   js.configs.recommended,
@@ -38,22 +37,8 @@ export default tseslint.config(
     rules: { 'no-console': 'off' },
   },
   {
-    files: ['frontend/**/*.{ts,tsx}'],
+    files: ['frontend/**/*.ts'],
     languageOptions: { globals: globals.browser },
-    plugins: { 'react-hooks': reactHooks, 'react-refresh': reactRefresh },
-    rules: {
-      ...reactHooks.configs.recommended.rules,
-      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
-    },
-  },
-  {
-    // Los componentes de shadcn/ui exportan también sus variantes de estilo
-    files: ['frontend/src/components/ui/**/*.tsx', 'frontend/src/test/**/*.tsx'],
-    rules: { 'react-refresh/only-export-components': 'off' },
-  },
-  {
-    files: ['frontend/vite.config.ts'],
-    languageOptions: { globals: globals.node },
   },
   prettier,
 );

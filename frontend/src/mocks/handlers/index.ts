@@ -1,18 +1,12 @@
 import { http, HttpResponse } from 'msw';
 import { ruta } from '../utils';
-import { anunciosHandlers } from './anuncios';
-import { asistenciaHandlers } from './asistencia';
 import { authHandlers } from './auth';
 import { configuracionHandlers } from './configuracion';
-import { dashboardHandlers } from './dashboard';
-import { donacionesHandlers } from './donaciones';
-import { eventosHandlers } from './eventos';
 import { miembrosHandlers } from './miembros';
 import { ministeriosHandlers } from './ministerios';
-import { reportesHandlers } from './reportes';
 import { usuariosHandlers } from './usuarios';
 
-// Cada dueño agrega aquí los handlers de su módulo (F2: miembros/ministerios, F3: eventos…, F4: donaciones…)
+// Cada dueño agrega aquí los handlers de su módulo (F1 y F2 migrados; F3 y F4 pendientes)
 export const handlers = [
   http.get(ruta('/health'), () => HttpResponse.json({ data: { status: 'ok' } })),
   ...authHandlers,
@@ -20,10 +14,4 @@ export const handlers = [
   ...configuracionHandlers,
   ...miembrosHandlers,
   ...ministeriosHandlers,
-  ...eventosHandlers,
-  ...asistenciaHandlers,
-  ...anunciosHandlers,
-  ...donacionesHandlers,
-  ...dashboardHandlers,
-  ...reportesHandlers,
 ];

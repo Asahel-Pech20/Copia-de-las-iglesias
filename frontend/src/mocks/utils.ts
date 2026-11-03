@@ -1,8 +1,8 @@
 import { HttpResponse } from 'msw';
-import { API_URL } from '@/lib/config';
-import { type Permiso, tienePermiso } from '@/lib/permisos';
-import type { CodigoError, DetalleError } from '@/types/comunes';
-import type { Usuario } from '@/types/usuarios';
+import { API_URL } from '@/app/core/config';
+import { type Permiso, tienePermiso } from '@/app/core/permisos';
+import type { CodigoError, DetalleError } from '@/app/tipos/comunes';
+import type { Usuario } from '@/app/tipos/usuarios';
 import { db } from './db';
 
 /** URL absoluta de un endpoint del contrato: ruta('/miembros') */

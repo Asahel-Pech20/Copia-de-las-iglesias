@@ -1,4 +1,4 @@
-import type { Miembro } from '@/types/miembros';
+import type { Miembro } from '@/app/tipos/miembros';
 
 // Datos simulados de miembros y ministerios (F2). Ids legibles para usarlos en pruebas.
 

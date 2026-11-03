@@ -1,5 +1,5 @@
-import type { ConfiguracionIglesia, HorarioReunion } from '@/types/configuracion';
-import type { Usuario } from '@/types/usuarios';
+import type { ConfiguracionIglesia, HorarioReunion } from '@/app/tipos/configuracion';
+import type { Usuario } from '@/app/tipos/usuarios';
 
 /** Contraseña de todos los usuarios de prueba en modo mocks (VITE_USE_MOCKS=true). */
 export const PASSWORD_MOCK = 'Iglesia123';

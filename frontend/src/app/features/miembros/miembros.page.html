@@ -1,0 +1,147 @@
+<app-page-header titulo="Miembros" descripcion="Personas de la congregación.">
+  <a *appPuede="'miembros:crear'" matButton="filled" routerLink="/miembros/nuevo">
+    <lucide-icon [img]="iconos.Plus" [size]="16" aria-hidden="true" /> Nuevo miembro
+  </a>
+</app-page-header>
+
+<div class="filtros" role="search">
+  <app-campo-busqueda
+    [valor]="filtros.valores().q"
+    placeholder="Buscar por nombre"
+    (cambio)="filtros.cambiar({ q: $event })"
+  />
+  <mat-form-field subscriptSizing="dynamic" class="select-filtro">
+    <mat-label>Estado</mat-label>
+    <mat-select
+      [value]="filtros.valores().estado"
+      (valueChange)="filtros.cambiar({ estado: $event })"
+    >
+      @for (o of opcionesEstado; track o.valor) {
+        <mat-option [value]="o.valor">{{ o.etiqueta }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field subscriptSizing="dynamic" class="select-filtro">
+    <mat-label>Ministerio</mat-label>
+    <mat-select
+      [value]="filtros.valores().ministerioId"
+      (valueChange)="filtros.cambiar({ ministerioId: $event })"
+    >
+      <mat-option value="">Todos los ministerios</mat-option>
+      @for (m of opcionesMinisterio(); track m.id) {
+        <mat-option [value]="m.id">{{ m.nombre }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+</div>
+
+<section class="tarjeta">
+  @if (consulta.isLoading() && !consulta.hasValue()) {
+    <app-esqueleto [columnas]="6" />
+  } @else if (consulta.error()) {
+    <app-estado-error [error]="consulta.error()" (reintentar)="consulta.reload()" />
+  } @else if (filas().length === 0) {
+    <app-estado-vacio
+      [icono]="iconos.Users"
+      [titulo]="hayFiltros() ? 'No hay miembros con estos filtros' : 'Aún no hay miembros'"
+      [descripcion]="
+        hayFiltros()
+          ? 'Prueba con otra búsqueda o cambia los filtros.'
+          : 'Registra a las personas de la congregación para empezar.'
+      "
+    >
+      <a *appPuede="'miembros:crear'" matButton="filled" routerLink="/miembros/nuevo">
+        <lucide-icon [img]="iconos.Plus" [size]="16" aria-hidden="true" /> Nuevo miembro
+      </a>
+    </app-estado-vacio>
+  } @else {
+    <div class="contenedor-tabla">
+      <table
+        mat-table
+        [dataSource]="filas()"
+        aria-label="Miembros"
+        matSort
+        [matSortActive]="orden().campo"
+        [matSortDirection]="orden().direccion"
+        (matSortChange)="ordenar($event)"
+      >
+        <ng-container matColumnDef="apellidos">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Nombre</th>
+          <td mat-cell *matCellDef="let m">
+            <a [routerLink]="['/miembros', m.id]" class="fuerte"
+              >{{ m.nombre }} {{ m.apellidos }}</a
+            >
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="telefono">
+          <th mat-header-cell *matHeaderCellDef>Teléfono</th>
+          <td mat-cell *matCellDef="let m">{{ m.telefono ?? '—' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef>Correo</th>
+          <td mat-cell *matCellDef="let m">{{ m.email ?? '—' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="fechaIngreso">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Ingreso</th>
+          <td mat-cell *matCellDef="let m">{{ fecha(m.fechaIngreso) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="ministerios">
+          <th mat-header-cell *matHeaderCellDef>Ministerios</th>
+          <td mat-cell *matCellDef="let m">{{ nombresMinisterios(m) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="activo">
+          <th mat-header-cell *matHeaderCellDef>Estado</th>
+          <td mat-cell *matCellDef="let m"><app-badge-estado [activo]="m.activo" /></td>
+        </ng-container>
+        <ng-container matColumnDef="acciones">
+          <th mat-header-cell *matHeaderCellDef><span class="sr-only">Acciones</span></th>
+          <td mat-cell *matCellDef="let m" class="acciones">
+            <button
+              matIconButton
+              type="button"
+              [matMenuTriggerFor]="menu"
+              [attr.aria-label]="'Acciones de ' + m.nombre + ' ' + m.apellidos"
+            >
+              <lucide-icon [img]="iconos.MoreHorizontal" [size]="18" aria-hidden="true" />
+            </button>
+            <mat-menu #menu="matMenu" xPosition="before">
+              <a mat-menu-item [routerLink]="['/miembros', m.id]">
+                <lucide-icon [img]="iconos.Eye" [size]="16" aria-hidden="true" /> Ver perfil
+              </a>
+              @if (puedeEditar()) {
+                <a mat-menu-item [routerLink]="['/miembros', m.id, 'editar']">
+                  <lucide-icon [img]="iconos.Pencil" [size]="16" aria-hidden="true" /> Editar
+                </a>
+              }
+              @if (puedeDesactivar()) {
+                @if (m.activo) {
+                  <button
+                    mat-menu-item
+                    type="button"
+                    class="texto-peligro"
+                    (click)="cambiarEstado(m)"
+                  >
+                    <lucide-icon [img]="iconos.UserX" [size]="16" aria-hidden="true" /> Desactivar
+                  </button>
+                } @else {
+                  <button mat-menu-item type="button" (click)="cambiarEstado(m)">
+                    <lucide-icon [img]="iconos.UserCheck" [size]="16" aria-hidden="true" />
+                    Reactivar
+                  </button>
+                }
+              }
+            </mat-menu>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+        <tr
+          mat-row
+          *matRowDef="let fila; columns: columnas"
+          class="clicable"
+          (click)="abrirFila($event, fila)"
+        ></tr>
+      </table>
+    </div>
+    <app-paginacion [meta]="consulta.value()!.meta" (cambio)="filtros.cambiar({ page: $event })" />
+  }
+</section>

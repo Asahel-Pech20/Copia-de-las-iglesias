@@ -3,5 +3,6 @@
   "semi": true,
   "trailingComma": "all",
   "printWidth": 100,
-  "endOfLine": "lf"
+  "endOfLine": "lf",
+  "overrides": [{ "files": "frontend/src/**/*.html", "options": { "parser": "angular" } }]
 }

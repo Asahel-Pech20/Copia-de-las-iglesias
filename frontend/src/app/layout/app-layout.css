@@ -1,0 +1,133 @@
+.saltar {
+  position: absolute;
+  left: -9999px;
+  z-index: 100;
+  border-radius: 8px;
+  background: var(--primario);
+  color: var(--primario-texto);
+  padding: 8px 12px;
+}
+.saltar:focus {
+  left: 8px;
+  top: 8px;
+}
+.contenedor {
+  min-height: 100dvh;
+  background: var(--fondo);
+}
+.lateral {
+  width: 240px;
+  padding: 16px;
+  border-right: 1px solid var(--borde);
+  background: var(--superficie);
+  --mat-sidenav-container-shape: 0;
+}
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.enlace {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--texto-suave);
+  text-decoration: none;
+}
+.enlace:hover {
+  background: var(--superficie-suave);
+  color: var(--texto);
+}
+.enlace.activo {
+  background: var(--primario);
+  color: var(--primario-texto);
+}
+.enlace.deshabilitado {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.principal {
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+}
+.barra {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  height: 56px;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--borde);
+  background: var(--superficie);
+  padding: 0 16px;
+}
+.derecha {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.cuenta {
+  max-width: 14rem;
+  color: var(--texto);
+}
+.datos-cuenta {
+  display: none;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+@media (min-width: 640px) {
+  .datos-cuenta {
+    display: flex;
+  }
+}
+.nombre {
+  max-width: 10rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rol {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--texto-suave);
+}
+.cabecera-menu {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 16px;
+}
+.correo {
+  font-size: 12px;
+}
+.peligro {
+  color: var(--peligro);
+}
+:host-context(.dark) .solo-claro,
+.solo-oscuro {
+  display: none;
+}
+:host-context(.dark) .solo-oscuro {
+  display: inline-flex;
+}
+.contenido {
+  flex: 1;
+  padding: 16px;
+  outline: none;
+}
+@media (min-width: 640px) {
+  .contenido {
+    padding: 24px;
+  }
+}
