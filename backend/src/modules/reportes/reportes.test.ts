@@ -47,13 +47,16 @@ async function leerExcel(buffer: Buffer) {
   return libro;
 }
 
+// 1 de enero del año en curso: nunca es futura y cuenta como "alta del año" sin depender de la fecha de ejecución
+const INGRESO = `${new Date().getUTCFullYear()}-01-01`;
+
 function miembro(nombre: string, apellidos: string, activo = true) {
   return prisma.miembro.create({
     data: {
       nombre,
       apellidos,
       email: `${nombre.toLowerCase()}@correo.mx`,
-      fechaIngreso: new Date('2026-02-01T00:00:00.000Z'),
+      fechaIngreso: new Date(`${INGRESO}T00:00:00.000Z`),
       activo,
     },
   });
@@ -278,7 +281,7 @@ describe('GET /reportes/miembros (B4-11)', () => {
       nombre: 'Álvarez, Beto',
       estado: 'Activo',
       ministerios: 'Música',
-      fechaIngreso: '2026-02-01',
+      fechaIngreso: INGRESO,
     });
   });
 

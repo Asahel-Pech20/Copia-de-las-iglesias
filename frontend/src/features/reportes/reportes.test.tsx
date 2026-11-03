@@ -178,7 +178,7 @@ describe('descarga (F4-09, F4-11)', () => {
       http.get(ruta('/reportes/ingresos'), async ({ request }) => {
         if (new URL(request.url).searchParams.get('formato') !== 'xlsx') return undefined;
         await delay(400);
-        return new HttpResponse(new Blob(['x']), {
+        return new HttpResponse(new TextEncoder().encode('x'), {
           headers: {
             'Content-Disposition': 'attachment; filename="reporte-ingresos-2026-11-02.xlsx"',
           },

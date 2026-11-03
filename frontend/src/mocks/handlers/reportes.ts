@@ -315,7 +315,8 @@ function responder(reporte: Reporte | Response, formato: string | null) {
   if (reporte instanceof Response) return reporte;
   if (formato === 'pdf' || formato === 'xlsx') {
     const nombre = `reporte-${reporte.tipo}-${format(new Date(), 'yyyy-MM-dd')}.${formato}`;
-    return new HttpResponse(new Blob([`Archivo simulado: ${reporte.titulo}`]), {
+    // Bytes y no un Blob: el Blob de jsdom no implementa stream() y Response (undici, Node 22) lo exige
+    return new HttpResponse(new TextEncoder().encode(`Archivo simulado: ${reporte.titulo}`), {
       headers: {
         'Content-Type': TIPOS_MIME[formato],
         'Content-Disposition': `attachment; filename="${nombre}"`,
