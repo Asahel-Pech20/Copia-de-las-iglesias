@@ -121,6 +121,9 @@ const rangoTexto = (desde: string, hasta: string): Dato[] => [
 
 // ───────── RF-09.1 · Miembros (B4-11) ─────────
 
+/** Colación en español (acentos y ñ en su lugar), independiente de la BD. */
+const ORDEN_ES = new Intl.Collator('es', { sensitivity: 'base' });
+
 const ESTADOS: Record<QueryReporteMiembros['estado'], string> = {
   activo: 'Activos',
   inactivo: 'Inactivos',
@@ -141,6 +144,11 @@ export async function miembros(
     const ids = new Set(integrantes.flat().map((m) => m.id));
     filas = filas.filter((m) => ids.has(m.id));
   }
+  // El orden de la BD depende de su collation (en postgres:16-alpine "Á" va después de "Z"):
+  // se ordena aquí, en español, para que el reporte sea igual en cualquier entorno
+  filas = filas.sort(
+    (a, b) => ORDEN_ES.compare(a.apellidos, b.apellidos) || ORDEN_ES.compare(a.nombre, b.nombre),
+  );
   const anio = (await miembrosService.hoyIglesia()).slice(0, 4);
   const activos = filas.filter((m) => m.activo).length;
   return {
