@@ -45,10 +45,42 @@ const ministerios = await seedMinisterios(); // Map nombre → id
 | `miembrosService.existeActivo(id)` | Validar responsables, asistencia, donaciones (B3, B4) |
 | `miembrosService.altasPorMes(desde, hasta)` | Gráfica `altasMiembrosPorMes` (B4) |
 | `miembrosService.listadoParaReporte({ estado })` | Reporte general de miembros (B4) |
+| `miembrosService.hoyIglesia()` | Fecha de hoy (`yyyy-MM-dd`) en la zona horaria configurada de la iglesia |
 | `ministeriosService.miembrosDe(ministerioId)` | Asistencia esperada, reporte por ministerio (B3, B4) |
 | `ministeriosService.ministeriosCoordinadosPor(usuarioId)` | Permisos "-propio" del coordinador (B3) |
 | `ministeriosService.contarActivos()` | Dashboard `totalMinisterios` (B4) |
 | `ministeriosService.participacionPorMinisterio()` | Gráfica `miembrosPorMinisterio` y RF-09.3 (B4) |
+
+## Servicios de B3 para otros módulos
+
+| Función | Uso |
+|---|---|
+| `eventosService.proximos(limit)` | Dashboard `eventosProximos` (B4), cartelera |
+| `eventosService.contarPorRango(desde, hasta)` | Eventos no cancelados en un rango (B4) |
+| `asistenciaService.resumenPorPeriodo(periodo, desde, hasta, ministerioIds?)` | Gráfica `asistenciaSemanal` y reportes (B4); agrupa en la zona horaria de la configuración |
+| `asistenciaService.contarRegistradas(desde, hasta)` | Dashboard `asistenciasRegistradas` (presentes en eventos no cancelados, B4) |
+| `asistenciaService.porEvento(eventoId)` | Reporte de asistencia por evento RF-09.2 (B4) |
+| `asistenciaService.participacionPorMinisterio(desde, hasta)` | Reporte de participación por ministerio RF-09.3 (B4) |
+| `asistenciaService.porcentajeMiembro(miembroId, meses)` | Resumen de asistencia en el detalle de miembro (B2-04) |
+| `anunciosService.vigentes({ soloImportantes, limit })` | Dashboard `anunciosImportantes` (B4), cartelera |
+
+Los eventos `PROGRAMADO` cuya fecha ya pasó se marcan `REALIZADO` al consultarlos (`eventosService.marcarRealizados()`), sin tareas programadas.
+
+Fechas sin hora (`?desde=2026-10-31&hasta=2026-10-31` en `/eventos` y `/asistencias`) cuentan como días completos en la zona horaria de la configuración (`eventos/eventos.fechas.ts`: `inicioDiaEnZona`, `finDiaEnZona`, `fechaEnZona`).
+
+## Donaciones, dashboard y reportes (B4)
+
+- `db:seed` también ejecuta `prisma/seed-b4.ts`: ~350 aportaciones de los últimos 12 meses (ofrendas anónimas cada domingo, diezmos, primicias, donaciones especiales y algunas anuladas). Reproducible e idempotente, como el de B2.
+- Montos siempre como string `"1500.00"`; las sumas las hace PostgreSQL sobre `NUMERIC`. Las anuladas no suman en ningún total.
+- `GET /dashboard` omite `ingresos` si el rol no tiene `donaciones:leer`. Cache de 60 s por vista que se invalida en cuanto cambia la "huella" de los datos (`dashboard.service.ts`).
+- Reportes: `?formato=json|pdf|xlsx`. Cada reporte arma un `Reporte` (`lib/exportadores/reporte.ts`) y `responderReporte()` lo devuelve como JSON o archivo adjunto (`reporte-<tipo>-<fecha>.<ext>`). El PDF admite hasta 5 000 filas.
+
+| Función | Uso |
+|---|---|
+| `donacionesService.resumenEntre(desde, hasta, agrupar)` | Totales por día, semana, mes, concepto o método (dashboard, reporte de ingresos) |
+| `donacionesService.totalDelMes(anio, mes)` | Total del mes sin anuladas |
+| `donacionesService.detalleParaReporte(desde, hasta)` | Aportaciones sin paginar |
+| `responderReporte(res, formato, reporte, ctx)` | Exportar cualquier `Reporte` a JSON, PDF o Excel |
 
 ## Crear un módulo nuevo
 

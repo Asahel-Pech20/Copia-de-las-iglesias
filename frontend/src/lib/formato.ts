@@ -1,6 +1,9 @@
 import { format, isValid, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
+import type { PrioridadAnuncio } from '@/types/anuncios';
 import type { Rol } from '@/types/comunes';
+import type { AgrupacionIngresos, ConceptoDonacion, MetodoPago } from '@/types/donaciones';
+import type { CategoriaEvento, EstadoEvento, TipoEvento } from '@/types/eventos';
 
 // Helpers de formato de AGENTS.md §4 (UX). Todas las fechas se muestran en español.
 
@@ -58,6 +61,55 @@ export const ETIQUETAS_ROL: Record<Rol, string> = {
   COORDINADOR: 'Coordinador',
 };
 
+// F3: eventos y anuncios
+export const ETIQUETAS_TIPO_EVENTO: Record<TipoEvento, string> = {
+  RELIGIOSO: 'Religioso',
+  ADMINISTRATIVO: 'Administrativo',
+};
+
+export const ETIQUETAS_CATEGORIA_EVENTO: Record<CategoriaEvento, string> = {
+  CULTO: 'Culto',
+  REUNION: 'Reunión',
+  ACTIVIDAD: 'Actividad',
+  OTRO: 'Otro',
+};
+
+export const ETIQUETAS_ESTADO_EVENTO: Record<EstadoEvento, string> = {
+  PROGRAMADO: 'Programado',
+  CANCELADO: 'Cancelado',
+  REALIZADO: 'Realizado',
+};
+
+export const ETIQUETAS_PRIORIDAD_ANUNCIO: Record<PrioridadAnuncio, string> = {
+  NORMAL: 'Normal',
+  IMPORTANTE: 'Importante',
+};
+
+// F4: donaciones
+export const ETIQUETAS_CONCEPTO: Record<ConceptoDonacion, string> = {
+  DIEZMO: 'Diezmo',
+  OFRENDA: 'Ofrenda',
+  PRIMICIA: 'Primicia',
+  DONACION_ESPECIAL: 'Donación especial',
+  OTRO: 'Otro',
+};
+
+export const ETIQUETAS_METODO: Record<MetodoPago, string> = {
+  EFECTIVO: 'Efectivo',
+  TRANSFERENCIA: 'Transferencia',
+  TARJETA: 'Tarjeta',
+  CHEQUE: 'Cheque',
+  OTRO: 'Otro',
+};
+
+export const ETIQUETAS_AGRUPACION: Record<AgrupacionIngresos, string> = {
+  dia: 'Día',
+  semana: 'Semana',
+  mes: 'Mes',
+  concepto: 'Concepto',
+  metodo: 'Método',
+};
+
 export const DIAS_SEMANA = [
   'Domingo',
   'Lunes',
@@ -67,6 +119,26 @@ export const DIAS_SEMANA = [
   'Viernes',
   'Sábado',
 ] as const;
+
+/** Mes en español: (2026, 10) → "octubre de 2026" */
+export function formatearMes(anio: number, mes: number): string {
+  return format(new Date(anio, mes - 1, 1), "MMMM 'de' yyyy", { locale: es });
+}
+
+/**
+ * Etiqueta legible de la clave de un resumen: "2026-10" → "oct 2026", "2026-W43" → "Sem. 43",
+ * "2026-10-30" → "30/10/2026"; las claves de enum (concepto, método) se traducen.
+ */
+export function etiquetaClave(clave: string): string {
+  if (/^\d{4}-\d{2}$/.test(clave)) {
+    return format(parseISO(`${clave}-01T00:00:00`), 'MMM yyyy', { locale: es });
+  }
+  if (/^\d{4}-W\d{2}$/.test(clave)) return `Sem. ${clave.slice(-2)} · ${clave.slice(0, 4)}`;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(clave)) return formatearFecha(clave);
+  return (
+    ETIQUETAS_CONCEPTO[clave as ConceptoDonacion] ?? ETIQUETAS_METODO[clave as MetodoPago] ?? clave
+  );
+}
 
 /** Convierte un mapa de etiquetas en opciones para SelectEnum */
 export function opcionesDe<T extends string>(etiquetas: Record<T, string>) {

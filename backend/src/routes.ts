@@ -1,8 +1,15 @@
 import { type Router as TipoRouter, Router } from 'express';
+import { anunciosRouter } from './modules/anuncios/anuncios.routes';
+import { asistenciaEventoRouter, asistenciasRouter } from './modules/asistencia/asistencia.routes';
 import { crearAuthRouter } from './modules/auth/auth.routes';
 import { configuracionRouter } from './modules/configuracion/configuracion.routes';
+import { crearDashboardRouter } from './modules/dashboard/dashboard.routes';
+import { donacionesRouter } from './modules/donaciones/donaciones.routes';
+import { eventosRouter } from './modules/eventos/eventos.routes';
 import { miembrosRouter } from './modules/miembros/miembros.routes';
 import { ministeriosRouter } from './modules/ministerios/ministerios.routes';
+import { crearPublicRouter } from './modules/public/public.routes';
+import { reportesRouter } from './modules/reportes/reportes.routes';
 import { usuariosRouter } from './modules/usuarios/usuarios.routes';
 
 export interface ModuloApi {
@@ -21,6 +28,14 @@ export function crearModulos(): ModuloApi[] {
     { prefijo: '/configuracion', router: configuracionRouter },
     { prefijo: '/miembros', router: miembrosRouter },
     { prefijo: '/ministerios', router: ministeriosRouter },
+    { prefijo: '/eventos', router: eventosRouter },
+    { prefijo: '/eventos', router: asistenciaEventoRouter },
+    { prefijo: '/asistencias', router: asistenciasRouter },
+    { prefijo: '/anuncios', router: anunciosRouter },
+    { prefijo: '/public', router: crearPublicRouter() },
+    { prefijo: '/donaciones', router: donacionesRouter },
+    { prefijo: '/dashboard', router: crearDashboardRouter() },
+    { prefijo: '/reportes', router: reportesRouter },
   ];
 }
 

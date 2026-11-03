@@ -1,4 +1,16 @@
-import { Home, type LucideIcon, Network, Settings, UserCog, Users } from 'lucide-react';
+import {
+  Banknote,
+  CalendarDays,
+  ClipboardCheck,
+  Home,
+  type LucideIcon,
+  FileBarChart,
+  Megaphone,
+  Network,
+  Settings,
+  UserCog,
+  Users,
+} from 'lucide-react';
 import type { Permiso } from '@/types/comunes';
 
 export interface EntradaMenu {
@@ -18,6 +30,21 @@ export const MENU: EntradaMenu[] = [
   { etiqueta: 'Inicio', ruta: '/', icono: Home },
   { etiqueta: 'Miembros', ruta: '/miembros', icono: Users, permiso: 'miembros:leer' },
   { etiqueta: 'Ministerios', ruta: '/ministerios', icono: Network, permiso: 'ministerios:leer' },
+  { etiqueta: 'Eventos', ruta: '/eventos', icono: CalendarDays, permiso: 'eventos:leer' },
+  {
+    etiqueta: 'Asistencia',
+    ruta: '/asistencia',
+    icono: ClipboardCheck,
+    permiso: ['asistencia:leer', 'asistencia:leer-propio'],
+  },
+  { etiqueta: 'Anuncios', ruta: '/anuncios', icono: Megaphone, permiso: 'anuncios:leer' },
+  { etiqueta: 'Donaciones', ruta: '/donaciones', icono: Banknote, permiso: 'donaciones:leer' },
+  {
+    etiqueta: 'Reportes',
+    ruta: '/reportes',
+    icono: FileBarChart,
+    permiso: ['reportes:generales', 'reportes:generales-propio', 'reportes:ingresos'],
+  },
   { etiqueta: 'Usuarios', ruta: '/usuarios', icono: UserCog, permiso: 'usuarios:leer' },
   {
     etiqueta: 'Configuración',

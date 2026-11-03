@@ -14,6 +14,13 @@ tags:
   - name: Configuración
   - name: Miembros
   - name: Ministerios
+  - name: Eventos
+  - name: Asistencia
+  - name: Anuncios
+  - name: Público
+  - name: Donaciones
+  - name: Dashboard
+  - name: Reportes
 
 components:
   securitySchemes:
@@ -36,6 +43,11 @@ components:
       { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
     Q: { name: q, in: query, schema: { type: string } }
     Orden: { name: orden, in: query, schema: { type: string, example: 'nombre:asc' } }
+    Formato:
+      name: formato
+      in: query
+      description: json (vista previa), pdf o xlsx (archivo adjunto reporte-<tipo>-<fecha>)
+      schema: { type: string, enum: [json, pdf, xlsx], default: json }
   schemas:
     Rol:
       type: string
@@ -173,7 +185,230 @@ components:
         activo: { type: boolean, description: Vínculo activo }
         fechaUnion: { type: string, format: date-time }
         fechaSalida: { type: string, format: date-time, nullable: true }
+    EventoEntrada:
+      type: object
+      properties:
+        titulo: { type: string, maxLength: 150 }
+        descripcion: { type: string, maxLength: 2000, nullable: true }
+        tipo: { type: string, enum: [RELIGIOSO, ADMINISTRATIVO] }
+        categoria: { type: string, enum: [CULTO, REUNION, ACTIVIDAD, OTRO] }
+        fechaInicio: { type: string, format: date-time }
+        fechaFin:
+          {
+            type: string,
+            format: date-time,
+            nullable: true,
+            description: 'Igual o posterior a fechaInicio',
+          }
+        lugar: { type: string, maxLength: 150 }
+        ministerioId: { type: string, format: uuid, nullable: true }
+    Evento:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        titulo: { type: string }
+        descripcion: { type: string, nullable: true }
+        tipo: { type: string, enum: [RELIGIOSO, ADMINISTRATIVO] }
+        categoria: { type: string, enum: [CULTO, REUNION, ACTIVIDAD, OTRO] }
+        fechaInicio: { type: string, format: date-time }
+        fechaFin: { type: string, format: date-time, nullable: true }
+        lugar: { type: string }
+        estado: { type: string, enum: [PROGRAMADO, CANCELADO, REALIZADO] }
+        motivoCancelacion: { type: string, nullable: true }
+        ministerio:
+          allOf: [{ $ref: '#/components/schemas/MinisterioResumen' }]
+          nullable: true
+        totalResponsables: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    EventoDetalle:
+      allOf:
+        - { $ref: '#/components/schemas/Evento' }
+        - type: object
+          properties:
+            creadoPor:
+              { type: object, properties: { id: { type: string }, nombre: { type: string } } }
+            responsables:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: { type: string, format: uuid }
+                  nombre: { type: string }
+                  apellidos: { type: string }
+                  activo: { type: boolean }
+            resumenAsistencia:
+              type: object
+              nullable: true
+              properties:
+                presentes: { type: integer }
+                ausentes: { type: integer }
+                total: { type: integer }
+    MiembroBreve:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        nombre: { type: string }
+        apellidos: { type: string }
+    ListaAsistencia:
+      type: object
+      properties:
+        evento:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            titulo: { type: string }
+            fechaInicio: { type: string, format: date-time }
+            fechaFin: { type: string, format: date-time, nullable: true }
+            estado: { type: string, enum: [PROGRAMADO, CANCELADO, REALIZADO] }
+            ministerio:
+              allOf: [{ $ref: '#/components/schemas/MinisterioResumen' }]
+              nullable: true
+        registros:
+          type: array
+          items:
+            type: object
+            properties:
+              miembro: { $ref: '#/components/schemas/MiembroBreve' }
+              presente: { type: boolean, nullable: true, description: 'null = sin registrar' }
+        totales:
+          type: object
+          properties:
+            presentes: { type: integer }
+            ausentes: { type: integer }
+            sinRegistrar: { type: integer }
+            total: { type: integer }
+    AnuncioEntrada:
+      type: object
+      properties:
+        titulo: { type: string, maxLength: 120 }
+        contenido: { type: string, maxLength: 5000, description: Texto plano o markdown simple }
+        prioridad: { type: string, enum: [NORMAL, IMPORTANTE], default: NORMAL }
+        fechaPublicacion: { type: string, format: date-time, description: Por defecto ahora }
+        fechaExpiracion:
+          {
+            type: string,
+            format: date-time,
+            nullable: true,
+            description: 'Posterior a fechaPublicacion',
+          }
+        eventoId: { type: string, format: uuid, nullable: true }
+    Anuncio:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        titulo: { type: string }
+        contenido: { type: string }
+        prioridad: { type: string, enum: [NORMAL, IMPORTANTE] }
+        fechaPublicacion: { type: string, format: date-time }
+        fechaExpiracion: { type: string, format: date-time, nullable: true }
+        autor: { type: object, properties: { id: { type: string }, nombre: { type: string } } }
+        evento:
+          type: object
+          nullable: true
+          properties:
+            id: { type: string, format: uuid }
+            titulo: { type: string }
+            fechaInicio: { type: string, format: date-time }
+            estado: { type: string, enum: [PROGRAMADO, CANCELADO, REALIZADO] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    DonacionEntrada:
+      type: object
+      properties:
+        fecha: { type: string, format: date, description: 'No futura (zona horaria de la iglesia)' }
+        monto:
+          type: string
+          example: '1500.00'
+          description: 'Decimal mayor que 0 con 2 decimales como máximo (también se acepta number)'
+        concepto: { type: string, enum: [DIEZMO, OFRENDA, PRIMICIA, DONACION_ESPECIAL, OTRO] }
+        conceptoDetalle:
+          { type: string, nullable: true, description: 'Obligatorio si concepto = OTRO' }
+        metodo: { type: string, enum: [EFECTIVO, TRANSFERENCIA, TARJETA, CHEQUE, OTRO] }
+        miembroId:
+          { type: string, format: uuid, nullable: true, description: 'Nulo = aportación anónima' }
+        anonima: { type: boolean, description: 'true con miembroId → 400' }
+        referencia: { type: string, nullable: true }
+        notas: { type: string, nullable: true }
+    Donacion:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        fecha: { type: string, format: date }
+        monto: { type: string, example: '1500.00' }
+        concepto: { type: string }
+        conceptoDetalle: { type: string, nullable: true }
+        metodo: { type: string }
+        anonima: { type: boolean }
+        referencia: { type: string, nullable: true }
+        notas: { type: string, nullable: true }
+        anulada: { type: boolean }
+        motivoAnulacion: { type: string, nullable: true }
+        anuladaEn: { type: string, format: date-time, nullable: true }
+        miembro: { allOf: [{ $ref: '#/components/schemas/MiembroBreve' }], nullable: true }
+        registradoPor:
+          { type: object, properties: { id: { type: string }, nombre: { type: string } } }
+        actualizadoPor:
+          type: object
+          nullable: true
+          properties: { id: { type: string }, nombre: { type: string } }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    GrupoIngresos:
+      type: object
+      properties:
+        clave:
+          { type: string, example: '2026-10', description: 'Día, semana ISO, mes o valor del enum' }
+        total: { type: string, example: '15230.00' }
+        cantidad: { type: integer }
+    DatoReporte:
+      type: object
+      properties:
+        etiqueta: { type: string }
+        valor: { nullable: true, oneOf: [{ type: string }, { type: number }] }
+        tipo: { type: string }
+    Reporte:
+      type: object
+      description: Formato común de los 4 reportes (lib/exportadores/reporte.ts)
+      properties:
+        tipo: { type: string, enum: [miembros, asistencia, ministerios, ingresos] }
+        titulo: { type: string }
+        subtitulo: { type: string }
+        filtros: { type: array, items: { $ref: '#/components/schemas/DatoReporte' } }
+        resumen: { type: array, items: { $ref: '#/components/schemas/DatoReporte' } }
+        secciones:
+          type: array
+          items:
+            type: object
+            properties:
+              titulo: { type: string }
+              columnas:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    clave: { type: string }
+                    titulo: { type: string }
+                    tipo:
+                      type: string
+                      enum: [texto, fecha, fechaHora, moneda, numero, porcentaje]
+                    ancho: { type: number }
+              filas: { type: array, items: { type: object } }
+              totales: { type: object }
+        generadoEn: { type: string, format: date-time }
+        generadoPor: { type: string }
   responses:
+    Reporte:
+      description: 'JSON { data: Reporte } o archivo PDF / Excel'
+      content:
+        application/json:
+          {
+            schema:
+              { type: object, properties: { data: { $ref: '#/components/schemas/Reporte' } } },
+          }
+        application/pdf: { schema: { type: string, format: binary } }
+        application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+          { schema: { type: string, format: binary } }
     SinContenido: { description: Sin contenido }
     Validacion:
       {
@@ -913,3 +1148,567 @@ paths:
         '204': { $ref: '#/components/responses/SinContenido' }
         '403': { $ref: '#/components/responses/Prohibido' }
         '404': { $ref: '#/components/responses/NoEncontrado' }
+
+  /eventos:
+    get:
+      tags: [Eventos]
+      summary: Eventos (eventos:leer)
+      description: |
+        Con `desde` y `hasta` (rango de hasta 93 días) devuelve todo el rango sin paginar (máx. 500), ordenado por `fechaInicio asc`,
+        incluyendo eventos que empiezan antes de `desde` y terminan dentro del rango (calendario).
+        Una fecha sin hora (`yyyy-MM-dd`) es el día completo en la zona horaria de la iglesia.
+        Sin rango: paginado y ordenado por `fechaInicio desc`. Los programados cuya fecha ya pasó se marcan `REALIZADO` al consultar.
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Q' }
+        - { $ref: '#/components/parameters/Orden' }
+        - { name: desde, in: query, schema: { type: string, example: '2026-10-01' } }
+        - { name: hasta, in: query, schema: { type: string, example: '2026-10-31T23:59:59Z' } }
+        - { name: tipo, in: query, schema: { type: string, enum: [RELIGIOSO, ADMINISTRATIVO] } }
+        - name: categoria
+          in: query
+          schema: { type: string, enum: [CULTO, REUNION, ACTIVIDAD, OTRO] }
+        - name: estado
+          in: query
+          schema: { type: string, enum: [PROGRAMADO, CANCELADO, REALIZADO] }
+        - { name: ministerioId, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Evento' } }
+                  meta: { $ref: '#/components/schemas/Meta' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '401': { $ref: '#/components/responses/NoAutenticado' }
+    post:
+      tags: [Eventos]
+      summary: Crear evento (eventos:crear; COORDINADOR solo con un ministerio que coordina)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - { $ref: '#/components/schemas/EventoEntrada' }
+                - { required: [titulo, tipo, categoria, fechaInicio, lugar] }
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                {
+                  type: object,
+                  properties: { data: { $ref: '#/components/schemas/EventoDetalle' } },
+                }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /eventos/proximos:
+    get:
+      tags: [Eventos]
+      summary: Próximos eventos programados desde ahora (eventos:leer)
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 20, default: 5 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Evento' } }
+  /eventos/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Eventos]
+      summary: Detalle con responsables, ministerio, creador y resumenAsistencia
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                {
+                  type: object,
+                  properties: { data: { $ref: '#/components/schemas/EventoDetalle' } },
+                }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+    patch:
+      tags: [Eventos]
+      summary: Editar (eventos:editar; COORDINADOR solo eventos de su ministerio)
+      description: Un evento `CANCELADO` no se edita (422).
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/EventoEntrada' } } }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /eventos/{id}/cancelar:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    patch:
+      tags: [Eventos]
+      summary: Cancelar (eventos:eliminar). No hay DELETE; la asistencia se conserva
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [motivo]
+              properties: { motivo: { type: string, minLength: 5, maxLength: 300 } }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /eventos/{id}/responsables:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    put:
+      tags: [Eventos]
+      summary: Reemplaza los responsables (máx. 10 miembros activos)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [miembroIds]
+              properties:
+                miembroIds: { type: array, maxItems: 10, items: { type: string, format: uuid } }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /eventos/{id}/asistencia:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Asistencia]
+      summary: Pase de lista (asistencia:leer; COORDINADOR solo su ministerio)
+      description: |
+        Integrantes activos del ministerio del evento (o todos los miembros activos si no tiene ministerio),
+        más quienes ya tienen registro aunque estén inactivos. `q` filtra por nombre; los totales son de toda la lista.
+      parameters: [{ $ref: '#/components/parameters/Q' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                {
+                  type: object,
+                  properties: { data: { $ref: '#/components/schemas/ListaAsistencia' } },
+                }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+    put:
+      tags: [Asistencia]
+      summary: Registrar asistencia (upsert masivo, asistencia:crear)
+      description: |
+        Evento cancelado o que empieza en más de 1 día → 422. Reenviar la lista actualiza (no duplica).
+        Si el evento ya empezó queda `REALIZADO`. Responde la lista actualizada.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [registros]
+              properties:
+                registros:
+                  type: array
+                  minItems: 1
+                  maxItems: 2000
+                  items:
+                    type: object
+                    required: [miembroId, presente]
+                    properties:
+                      miembroId: { type: string, format: uuid }
+                      presente: { type: boolean }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /asistencias:
+    get:
+      tags: [Asistencia]
+      summary: Historial paginado con datos del evento (asistencia:leer; COORDINADOR solo sus ministerios)
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { name: miembroId, in: query, schema: { type: string, format: uuid } }
+        - { name: eventoId, in: query, schema: { type: string, format: uuid } }
+        - { name: desde, in: query, schema: { type: string, format: date } }
+        - { name: hasta, in: query, schema: { type: string, format: date } }
+      responses:
+        '200': { description: OK (ordenado por fecha del evento desc) }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+  /asistencias/resumen:
+    get:
+      tags: [Asistencia]
+      summary: Resumen semanal (semana ISO) o mensual en la zona horaria de la iglesia
+      description: Serie continua (periodos sin datos con ceros). Por defecto 12 semanas o 6 meses hasta hoy; rango máx. 2 años.
+      parameters:
+        - name: periodo
+          in: query
+          required: true
+          schema: { type: string, enum: [semanal, mensual] }
+        - { name: desde, in: query, schema: { type: string, format: date } }
+        - { name: hasta, in: query, schema: { type: string, format: date } }
+        - { name: ministerioId, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        periodo: { type: string, example: '2026-W43' }
+                        eventos: { type: integer }
+                        presentes: { type: integer }
+                        ausentes: { type: integer }
+                        promedioPorEvento: { type: number }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+
+  /anuncios:
+    get:
+      tags: [Anuncios]
+      summary: Anuncios paginados, IMPORTANTE primero (anuncios:leer)
+      description: Con vigentes=true, publicados y no expirados; con vigentes=false, programados o expirados.
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Q' }
+        - { name: vigentes, in: query, schema: { type: boolean } }
+        - { name: prioridad, in: query, schema: { type: string, enum: [NORMAL, IMPORTANTE] } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Anuncio' } }
+                  meta: { $ref: '#/components/schemas/Meta' }
+    post:
+      tags: [Anuncios]
+      summary: Publicar (anuncios:crear)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - { $ref: '#/components/schemas/AnuncioEntrada' }
+                - { required: [titulo, contenido] }
+      responses:
+        '201': { description: Creado }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /anuncios/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Anuncios]
+      summary: Detalle (anuncios:leer)
+      responses:
+        '200': { description: OK }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+    patch:
+      tags: [Anuncios]
+      summary: Editar (anuncios:editar)
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/AnuncioEntrada' } } }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+    delete:
+      tags: [Anuncios]
+      summary: Eliminar (borrado físico, anuncios:eliminar)
+      responses:
+        '204': { $ref: '#/components/responses/SinContenido' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+
+  /public/cartelera:
+    get:
+      tags: [Público]
+      summary: Cartelera pública (sin sesión; cache 60 s; 60 solicitudes/min por IP)
+      description: Solo datos públicos; no incluye miembros, usuarios ni responsables.
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      iglesia:
+                        type: object
+                        properties:
+                          nombre: { type: string }
+                          logoUrl: { type: string, nullable: true }
+                          direccion: { type: string, nullable: true }
+                          ciudad: { type: string, nullable: true }
+                          telefono: { type: string, nullable: true }
+                          email: { type: string, nullable: true }
+                          sitioWeb: { type: string, nullable: true }
+                      horarios: { type: array, items: { $ref: '#/components/schemas/Horario' } }
+                      anuncios: { type: array, items: { type: object } }
+                      eventosProximos: { type: array, items: { type: object } }
+        '429': { description: Demasiadas solicitudes }
+
+  /donaciones:
+    get:
+      tags: [Donaciones]
+      summary: Aportaciones paginadas por fecha desc (donaciones:leer — ADMIN, PASTOR, TESORERO)
+      description: Excluye anuladas salvo incluirAnuladas=true. meta.totalMonto suma el filtro completo sin anuladas.
+      parameters:
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Orden' }
+        - { name: desde, in: query, schema: { type: string, format: date } }
+        - { name: hasta, in: query, schema: { type: string, format: date } }
+        - { name: concepto, in: query, schema: { type: string } }
+        - { name: metodo, in: query, schema: { type: string } }
+        - { name: miembroId, in: query, schema: { type: string, format: uuid } }
+        - { name: anonima, in: query, schema: { type: boolean } }
+        - { name: incluirAnuladas, in: query, schema: { type: boolean } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Donacion' } }
+                  meta:
+                    allOf:
+                      - { $ref: '#/components/schemas/Meta' }
+                      - { type: object, properties: { totalMonto: { type: string } } }
+        '403': { $ref: '#/components/responses/Prohibido' }
+    post:
+      tags: [Donaciones]
+      summary: Registrar aportación (donaciones:crear — ADMIN, TESORERO)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - { $ref: '#/components/schemas/DonacionEntrada' }
+                - { required: [fecha, monto, concepto, metodo] }
+      responses:
+        '201': { description: Creada }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /donaciones/resumen:
+    get:
+      tags: [Donaciones]
+      summary: Ingresos agrupados (donaciones:leer)
+      description: Serie continua (periodos o valores sin datos van en "0.00"). Sin fechas, el mes en curso. Rango máximo 2 años.
+      parameters:
+        - { name: desde, in: query, schema: { type: string, format: date } }
+        - { name: hasta, in: query, schema: { type: string, format: date } }
+        - name: agrupar
+          in: query
+          schema: { type: string, enum: [dia, semana, mes, concepto, metodo], default: mes }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      desde: { type: string, format: date }
+                      hasta: { type: string, format: date }
+                      agrupar: { type: string }
+                      total: { type: string }
+                      cantidad: { type: integer }
+                      grupos: { type: array, items: { $ref: '#/components/schemas/GrupoIngresos' } }
+        '400': { $ref: '#/components/responses/Validacion' }
+  /donaciones/resumen-mensual:
+    get:
+      tags: [Donaciones]
+      summary: Resumen de un mes (donaciones:leer)
+      description: total, mesAnterior, variacionPorcentual (null sin ingresos el mes anterior), porConcepto, porMetodo, anonimas e identificadas. Sin parámetros, el mes en curso.
+      parameters:
+        - { name: anio, in: query, schema: { type: integer } }
+        - { name: mes, in: query, schema: { type: integer, minimum: 1, maximum: 12 } }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Validacion' }
+  /donaciones/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    get:
+      tags: [Donaciones]
+      summary: Detalle con auditoría (donaciones:leer)
+      responses:
+        '200': { description: OK }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+    patch:
+      tags: [Donaciones]
+      summary: Editar (donaciones:editar); una anulada → 422
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/DonacionEntrada' } } }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /donaciones/{id}/anular:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    patch:
+      tags: [Donaciones]
+      summary: Anular con motivo (donaciones:eliminar); no existe DELETE
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [motivo]
+              properties: { motivo: { type: string, minLength: 5, maxLength: 300 } }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+
+  /dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Panel principal (dashboard:leer); cache de 60 s que se invalida al cambiar los datos
+      description: La clave `ingresos` se omite (no es null) si el rol no tiene donaciones:leer.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      miembrosActivos: { type: integer }
+                      totalMinisterios: { type: integer }
+                      asistenciasRegistradas:
+                        type: object
+                        properties:
+                          mesActual: { type: integer }
+                          semanaActual: { type: integer }
+                      eventosProximos:
+                        { type: array, items: { $ref: '#/components/schemas/Evento' } }
+                      anunciosImportantes:
+                        { type: array, items: { $ref: '#/components/schemas/Anuncio' } }
+                      graficas:
+                        type: object
+                        properties:
+                          asistenciaSemanal: { type: array, items: { type: object } }
+                          miembrosPorMinisterio: { type: array, items: { type: object } }
+                          altasMiembrosPorMes: { type: array, items: { type: object } }
+                      ingresos:
+                        type: object
+                        properties:
+                          mesActual: { type: string }
+                          mesAnterior: { type: string }
+                          variacionPorcentual: { type: number, nullable: true }
+                          porMes: { type: array, items: { type: object } }
+
+  /reportes/miembros:
+    get:
+      tags: [Reportes]
+      summary: Reporte general de miembros (reportes:generales; COORDINADOR solo sus ministerios)
+      parameters:
+        - name: estado
+          in: query
+          schema: { type: string, enum: [activo, inactivo, todos], default: activo }
+        - { $ref: '#/components/parameters/Formato' }
+      responses:
+        '200': { $ref: '#/components/responses/Reporte' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /reportes/asistencia:
+    get:
+      tags: [Reportes]
+      summary: Asistencia por evento (eventoId) o por periodo semanal/mensual (reportes:generales)
+      parameters:
+        - { name: eventoId, in: query, schema: { type: string, format: uuid } }
+        - { name: desde, in: query, schema: { type: string, format: date } }
+        - { name: hasta, in: query, schema: { type: string, format: date } }
+        - name: periodo
+          in: query
+          schema: { type: string, enum: [semanal, mensual], default: semanal }
+        - { $ref: '#/components/parameters/Formato' }
+      responses:
+        '200': { $ref: '#/components/responses/Reporte' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /reportes/ministerios:
+    get:
+      tags: [Reportes]
+      summary: Participación por ministerio (reportes:generales; COORDINADOR solo sus ministerios)
+      parameters:
+        - { name: ministerioId, in: query, schema: { type: string, format: uuid } }
+        - { name: desde, in: query, schema: { type: string, format: date } }
+        - { name: hasta, in: query, schema: { type: string, format: date } }
+        - { $ref: '#/components/parameters/Formato' }
+      responses:
+        '200': { $ref: '#/components/responses/Reporte' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+  /reportes/ingresos:
+    get:
+      tags: [Reportes]
+      summary: Ingresos por periodo (reportes:ingresos — ADMIN, PASTOR, TESORERO)
+      parameters:
+        - { name: desde, in: query, schema: { type: string, format: date } }
+        - { name: hasta, in: query, schema: { type: string, format: date } }
+        - name: agrupar
+          in: query
+          schema: { type: string, enum: [dia, semana, mes, concepto, metodo], default: mes }
+        - { $ref: '#/components/parameters/Formato' }
+      responses:
+        '200': { $ref: '#/components/responses/Reporte' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }

@@ -18,6 +18,13 @@ Formato de cada tarea: **ID · Título**, RF, fase, tamaño (S ≈ ½ día, M �
 | Genaro Aurelio Antonio Pacheco | [B3 · Eventos, Asistencia, Anuncios, Cartelera](backend/B3-eventos-asistencia-anuncios/plan.md) — 15 tareas | [F3 · Calendario, Asistencia, Anuncios, Cartelera](frontend/F3-eventos-asistencia-anuncios/plan.md) — 13 tareas |
 | Oscar Michel Matos May | [B4 · Donaciones, Dashboard, Reportes](backend/B4-donaciones-dashboard-reportes/plan.md) — 14 tareas | [F4 · Donaciones, Dashboard, Reportes](frontend/F4-donaciones-dashboard-reportes/plan.md) — 11 tareas |
 
+## Auditorías
+Las revisiones del avance están en [Auditorias/](../Auditorias/). Cada una tiene un índice (`Auditoria_<n>/README.md`) y un archivo de observaciones por integrante y capa: `<Integrante>/backend/observaciones.md` y `<Integrante>/frontend/observaciones.md`. Atiende las tuyas en una rama `fix/<subseccion>-auditoria<n>-<id>` y marca su casilla en el mismo PR.
+
+| Auditoría | Fecha | Índice |
+|---|---|---|
+| 1 | 2026-11-02 | [Auditoria_1/README.md](../Auditorias/Auditoria_1/README.md) |
+
 ## Estructura
 ```
 docs/

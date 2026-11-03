@@ -42,4 +42,4 @@
 - Exportar `contarActivos()`, `obtenerActivos(filtros)`, `existeActivo(id)`, `altasPorMes(desde, hasta)` y `listadoParaReporte(filtros)` (sin paginar) para B3 y B4. Documentar en `miembros.service.ts`.
 - **Criterios de aceptación**
   - [x] Pruebas unitarias de cada función.
-  - [ ] B4 confirma que le sirven para dashboard y reporte general.
+  - [x] B4 confirma que le sirven para dashboard y reporte general. *(confirmado por B4)*

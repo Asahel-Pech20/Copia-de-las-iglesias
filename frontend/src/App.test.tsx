@@ -22,7 +22,11 @@ describe('sesión (F1-08, F1-09)', () => {
     await usuario.type(await screen.findByLabelText('Correo'), 'pastor@iglesia.local');
     await usuario.type(screen.getByLabelText('Contraseña'), PASSWORD_MOCK);
     await usuario.click(screen.getByRole('button', { name: 'Entrar' }));
-    expect(await screen.findByRole('heading', { name: /Hola, Pastor/ })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', {
+        name: /(Buenos días|Buenas tardes|Buenas noches), Pastor/,
+      }),
+    ).toBeInTheDocument();
   });
 
   it('credenciales inválidas muestran el mensaje del servidor', async () => {
@@ -52,7 +56,11 @@ describe('sesión (F1-08, F1-09)', () => {
 
   it('usuario ya autenticado en /login es redirigido a /', async () => {
     await renderApp('/login', { como: 'u-admin' });
-    expect(await screen.findByRole('heading', { name: /Hola, Administrador/ })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', {
+        name: /(Buenos días|Buenas tardes|Buenas noches), Administrador/,
+      }),
+    ).toBeInTheDocument();
   });
 
   it('recargar mantiene la sesión (cookie de refresh)', async () => {

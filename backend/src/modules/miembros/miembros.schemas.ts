@@ -3,14 +3,8 @@ import { esquemaPaginacion } from '../../lib/paginacion';
 
 const texto = (max: number) => z.string().trim().max(max);
 
-/** "yyyy-MM-dd" de hoy en hora local del servidor (para comparar fechas @db.Date). */
-function hoy() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
+// "No futura" se valida en el service con la zona horaria de la iglesia (hoyIglesia)
 const fecha = z.iso.date('Fecha no válida (formato yyyy-MM-dd).');
-const fechaNoFutura = (mensaje: string) => fecha.refine((v) => v <= hoy(), mensaje);
 
 // Teléfono: 7–15 dígitos; se aceptan +, espacios y guiones, y se guarda sin separadores
 const telefono = z
@@ -28,10 +22,10 @@ const opcional = <T extends z.ZodType>(esquema: T) =>
 const camposMiembro = {
   nombre: texto(80).min(1, 'Escribe el nombre.'),
   apellidos: texto(120).min(1, 'Escribe los apellidos.'),
-  fechaIngreso: fechaNoFutura('La fecha de ingreso no puede ser futura.'),
+  fechaIngreso: fecha,
   telefono: opcional(telefono),
   email: opcional(email),
-  fechaNacimiento: opcional(fechaNoFutura('La fecha de nacimiento no puede ser futura.')),
+  fechaNacimiento: opcional(fecha),
   direccion: opcional(texto(250)),
   notas: opcional(texto(1000)),
 };
