@@ -13,6 +13,8 @@ import { MiCuentaPage } from '@/features/auth/pages/MiCuentaPage';
 import { RecuperarPage } from '@/features/auth/pages/RecuperarPage';
 import { RestablecerPage } from '@/features/auth/pages/RestablecerPage';
 import { ConfiguracionPage } from '@/features/configuracion/pages/ConfiguracionPage';
+import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
+import { DonacionesPage } from '@/features/donaciones/pages/DonacionesPage';
 import { EventoDetallePage } from '@/features/eventos/pages/EventoDetallePage';
 import { EventoFormPage } from '@/features/eventos/pages/EventoFormPage';
 import { EventosPage } from '@/features/eventos/pages/EventosPage';
@@ -21,8 +23,8 @@ import { MiembroPerfilPage } from '@/features/miembros/pages/MiembroPerfilPage';
 import { MiembrosPage } from '@/features/miembros/pages/MiembrosPage';
 import { MinisterioDetallePage } from '@/features/ministerios/pages/MinisterioDetallePage';
 import { MinisteriosPage } from '@/features/ministerios/pages/MinisteriosPage';
+import { ReportesPage } from '@/features/reportes/pages/ReportesPage';
 import { UsuariosPage } from '@/features/usuarios/pages/UsuariosPage';
-import { InicioPage } from '@/pages/InicioPage';
 import { NoEncontradoPage } from '@/pages/NoEncontradoPage';
 import { RutaProtegida } from './RutaProtegida';
 
@@ -50,7 +52,7 @@ export const rutas: RouteObject[] = [
       </RutaProtegida>
     ),
     children: [
-      { index: true, element: <InicioPage /> },
+      { index: true, element: <DashboardPage /> },
       {
         path: 'usuarios',
         element: (
@@ -185,6 +187,25 @@ export const rutas: RouteObject[] = [
         element: (
           <RutaProtegida permiso="anuncios:leer">
             <AnunciosPage />
+          </RutaProtegida>
+        ),
+      },
+      // F4: donaciones y reportes
+      {
+        path: 'donaciones',
+        element: (
+          <RutaProtegida permiso="donaciones:leer">
+            <DonacionesPage />
+          </RutaProtegida>
+        ),
+      },
+      {
+        path: 'reportes',
+        element: (
+          <RutaProtegida
+            permiso={['reportes:generales', 'reportes:generales-propio', 'reportes:ingresos']}
+          >
+            <ReportesPage />
           </RutaProtegida>
         ),
       },

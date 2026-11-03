@@ -1,8 +1,10 @@
 import {
+  Banknote,
   CalendarDays,
   ClipboardCheck,
   Home,
   type LucideIcon,
+  FileBarChart,
   Megaphone,
   Network,
   Settings,
@@ -36,6 +38,13 @@ export const MENU: EntradaMenu[] = [
     permiso: ['asistencia:leer', 'asistencia:leer-propio'],
   },
   { etiqueta: 'Anuncios', ruta: '/anuncios', icono: Megaphone, permiso: 'anuncios:leer' },
+  { etiqueta: 'Donaciones', ruta: '/donaciones', icono: Banknote, permiso: 'donaciones:leer' },
+  {
+    etiqueta: 'Reportes',
+    ruta: '/reportes',
+    icono: FileBarChart,
+    permiso: ['reportes:generales', 'reportes:generales-propio', 'reportes:ingresos'],
+  },
   { etiqueta: 'Usuarios', ruta: '/usuarios', icono: UserCog, permiso: 'usuarios:leer' },
   {
     etiqueta: 'Configuración',
