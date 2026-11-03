@@ -346,7 +346,7 @@ model HorarioReunion { id, nombre, diaSemana Int (0=domingo..6), horaInicio "HH:
 |---|---|---|
 | POST | `/auth/login` | público (rate limit 5/min/IP) |
 | POST | `/auth/refresh` | cookie refresh |
-| POST | `/auth/logout` | autenticado |
+| POST | `/auth/logout` | cookie refresh (no requiere access token) |
 | POST | `/auth/forgot-password` | público (responde 204 siempre) |
 | POST | `/auth/reset-password` | público (token) |
 | GET | `/auth/me` | autenticado → usuario + `permisos[]` |

@@ -16,7 +16,7 @@ export function SheetContent({
 }: ComponentProps<typeof SheetPrimitive.Content> & { lado?: 'izquierda' | 'derecha' }) {
   return (
     <SheetPrimitive.Portal>
-      <SheetPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
+      <SheetPrimitive.Overlay className="fixed inset-0 z-50 bg-overlay" />
       <SheetPrimitive.Content
         className={cn(
           'fixed inset-y-0 z-50 flex w-72 max-w-[85vw] flex-col gap-4 bg-superficie p-4 text-texto shadow-lg',

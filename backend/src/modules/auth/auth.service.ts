@@ -109,19 +109,20 @@ export async function logout(token: string | undefined) {
  */
 export async function crearTokenEnlace(usuarioId: string, horas: number) {
   const token = generarTokenAleatorio();
-  await prisma.$transaction([
-    prisma.passwordResetToken.updateMany({
+  // Transacción interactiva: las escrituras van una tras otra por la misma conexión
+  await prisma.$transaction(async (tx) => {
+    await tx.passwordResetToken.updateMany({
       where: { usuarioId, usadoEn: null },
       data: { usadoEn: new Date() },
-    }),
-    prisma.passwordResetToken.create({
+    });
+    await tx.passwordResetToken.create({
       data: {
         usuarioId,
         tokenHash: hashToken(token),
         expiraEn: new Date(Date.now() + horas * 3_600_000),
       },
-    }),
-  ]);
+    });
+  });
   return `${env.FRONTEND_URL}/restablecer?token=${token}`;
 }
 

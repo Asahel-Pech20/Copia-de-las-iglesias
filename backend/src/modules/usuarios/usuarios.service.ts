@@ -67,7 +67,7 @@ export async function listar(query: QueryUsuarios) {
   const orderBy = ordenar(query.orden, ['nombre', 'email', 'rol', 'createdAt', 'ultimoAcceso'], {
     nombre: 'asc',
   });
-  const [datos, total] = await prisma.$transaction([
+  const [datos, total] = await Promise.all([
     prisma.usuario.findMany({ where, orderBy, skip, take, select: SELECT_USUARIO }),
     prisma.usuario.count({ where }),
   ]);

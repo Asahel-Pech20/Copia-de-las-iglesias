@@ -9,6 +9,7 @@ import { crearModulos } from './routes';
 const PUBLICAS = new Set([
   'POST /auth/login',
   'POST /auth/refresh',
+  'POST /auth/logout',
   'POST /auth/forgot-password',
   'POST /auth/reset-password',
   'GET /configuracion',
@@ -18,7 +19,7 @@ const PUBLICAS = new Set([
 ]);
 
 /** Rutas de la propia cuenta: requieren sesión pero no un permiso de módulo. */
-const SOLO_SESION = new Set(['POST /auth/logout', 'GET /auth/me', 'PATCH /auth/me/password']);
+const SOLO_SESION = new Set(['GET /auth/me', 'PATCH /auth/me/password']);
 
 interface CapaRuta {
   route?: { path: string; methods: Record<string, boolean>; stack: { name: string }[] };
