@@ -42,6 +42,7 @@ pnpm lint && pnpm typecheck
 | Oscar Michel Matos May | B4 | F4 | Donaciones, dashboard, reportes PDF/Excel |
 
 Tareas: `docs/README.md` → `docs/{backend,frontend}/<subseccion>/plan.md` → `tasks-*.md`.
+Auditorías: `Auditorias/Auditoria_<n>/README.md` (índice) → `<Integrante>/{backend,frontend}/observaciones.md`. Cada quien lee solo su archivo.
 
 ## Hechos clave (no olvidar)
 - **Usuarios ≠ Miembros.** Solo los usuarios (personal) inician sesión. Los miembros son registros.
@@ -88,6 +89,7 @@ Tareas: `docs/README.md` → `docs/{backend,frontend}/<subseccion>/plan.md` → 
   - Para F2 (PR #8): `AportacionesDelMiembro` (`features/donaciones/components/`, props `miembroId`, `limite?`) para la pestaña *Aportaciones* del perfil; se oculta solo sin `donaciones:leer`. No se tocaron `MiembroPerfilPage.tsx`, `MiembrosPage.tsx` ni `DataTable.tsx`.
   - Para F2/F3 (F4-11): `<BotonExportar tipo filtros />` (`features/reportes/components/`) se oculta solo si el rol no ve ese reporte. Otros reutilizables: `TarjetaGrafica`/`GraficaBarras`/`GraficaDona` (`features/dashboard/components/Graficas.tsx`, con "Ver como tabla"), `useFormatoMoneda` (`hooks/`).
   - Contrato: la auditoría "anulada por" sale de `actualizadoPor` (el backend no tiene campo `anuladaPor`). `lib/formato.ts` ganó etiquetas de concepto/método/agrupación, `formatearMes` y `etiquetaClave`. Formato numérico es-MX (decimal con punto).
+- **Auditoría 1** (2026-11-02, commit `bb91c07`, misma rama que B4/F4): 35 observaciones por integrante y capa en [Auditorias/Auditoria_1/](Auditorias/Auditoria_1/README.md), ninguna de severidad alta. Corregidas: A1-F4-01 … 05. Las demás están pendientes de cada dueño.
 - Entorno de esta laptop: no hay Docker ni pnpm global. Se usó `npx pnpm@12.16.1` y un PostgreSQL 16 portátil (`embedded-postgres`, puerto 5433) fuera del repo. Para seguir: instalar pnpm y PostgreSQL o Docker (`docs/requisitos.md`).
 
 ### Cómo levantar todo

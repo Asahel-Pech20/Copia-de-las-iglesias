@@ -29,6 +29,6 @@
 ## Antes del PR
 
 1. [x] Marcar en `tasks-02-dashboard.md` los criterios de modo oscuro y 360 px (ya verificados).
-2. Commit: `feat(donaciones,dashboard,reportes): F4 — pantallas de donaciones, dashboard y reportes`.
+2. [x] Commit: `feat(donaciones,dashboard,reportes): F4 — pantallas de donaciones, dashboard y reportes` (`49eca2b`).
 3. Pedir a F1 que revise `lib/formato.ts` y `App.test.tsx` (ver `A1-F1-04`).
 4. Avisar a F2 de `AportacionesDelMiembro` y `BotonExportar` (ver `A1-F2-01` y `A1-F2-02`).
