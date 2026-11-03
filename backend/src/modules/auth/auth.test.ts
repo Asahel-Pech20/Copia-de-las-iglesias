@@ -155,6 +155,21 @@ describe('refresh, logout y /auth/me (B1-10)', () => {
       401,
     );
   });
+
+  it('logout funciona solo con la cookie (access token vencido o ausente)', async () => {
+    await crearUsuario('ADMIN', { email: 'l2@prueba.local' });
+    const cookie = cookieDe(await entrar('l2@prueba.local'));
+    const res = await request(app)
+      .post('/api/v1/auth/logout')
+      .set('Authorization', 'Bearer token-vencido')
+      .set('Cookie', cookie);
+    expect(res.status).toBe(204);
+    expect((await request(app).post('/api/v1/auth/refresh').set('Cookie', cookie)).status).toBe(
+      401,
+    );
+    // Sin cookie tampoco falla: no hay nada que revocar
+    expect((await request(app).post('/api/v1/auth/logout')).status).toBe(204);
+  });
 });
 
 describe('recuperación de contraseña (B1-12)', () => {

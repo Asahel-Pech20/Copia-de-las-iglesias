@@ -518,10 +518,10 @@ paths:
   /auth/logout:
     post:
       tags: [Auth]
-      summary: Revoca el refresh token y borra la cookie
+      summary: Revoca el refresh token (cookie) y la borra; no requiere access token
+      security: [{ cookieRefresh: [] }]
       responses:
         '204': { $ref: '#/components/responses/SinContenido' }
-        '401': { $ref: '#/components/responses/NoAutenticado' }
   /auth/me:
     get:
       tags: [Auth]

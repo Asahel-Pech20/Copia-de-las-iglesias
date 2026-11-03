@@ -8,7 +8,8 @@ export function TabsList({ className, ...props }: ComponentProps<typeof TabsPrim
   return (
     <TabsPrimitive.List
       className={cn(
-        'inline-flex h-9 max-w-full items-center overflow-x-auto rounded-lg bg-superficie-suave p-1',
+        // flex-wrap: en móvil las pestañas pasan a otra línea en vez de quedar cortadas
+        'inline-flex min-h-9 max-w-full flex-wrap items-center gap-y-1 rounded-lg bg-superficie-suave p-1',
         className,
       )}
       {...props}

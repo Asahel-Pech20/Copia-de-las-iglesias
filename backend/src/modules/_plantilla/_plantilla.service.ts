@@ -16,7 +16,9 @@ export async function listar(query: QueryListar) {
     ...(query.activo !== undefined && { activo: query.activo }),
   };
   const orderBy = ordenar(query.orden, ['nombre', 'diaSemana'], { nombre: 'asc' });
-  const [datos, total] = await prisma.$transaction([
+  // Lecturas en paralelo con Promise.all (no $transaction([...]): con el adaptador pg manda
+  // las consultas a la vez por una sola conexión y pg avisa que en la v9 será un error)
+  const [datos, total] = await Promise.all([
     prisma.horarioReunion.findMany({ where, orderBy, skip, take, select: SELECT }),
     prisma.horarioReunion.count({ where }),
   ]);

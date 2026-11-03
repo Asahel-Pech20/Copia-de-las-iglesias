@@ -30,8 +30,14 @@ export function Paginacion({ meta, alCambiarPagina }: PaginacionProps) {
         >
           <ChevronLeft aria-hidden /> Anterior
         </Button>
-        <span aria-current="page">
-          Página {meta.page} de {Math.max(meta.totalPages, 1)}
+        <span aria-current="page" className="whitespace-nowrap">
+          {/* En móvil el texto corto para que no se parta entre los botones */}
+          <span className="sm:hidden" aria-hidden>
+            {meta.page} / {Math.max(meta.totalPages, 1)}
+          </span>
+          <span className="sr-only sm:not-sr-only">
+            Página {meta.page} de {Math.max(meta.totalPages, 1)}
+          </span>
         </span>
         <Button
           variante="contorno"

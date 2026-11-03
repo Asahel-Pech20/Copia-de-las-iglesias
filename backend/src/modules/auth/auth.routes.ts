@@ -27,7 +27,8 @@ export function crearAuthRouter() {
   const router = Router();
   router.post('/login', limitePorMinuto(5), validar({ body: esquemaLogin }), c.login);
   router.post('/refresh', c.refrescar);
-  router.post('/logout', autenticar, c.logout);
+  // Solo con la cookie: así se puede cerrar sesión aunque el access token ya haya vencido
+  router.post('/logout', c.logout);
   router.post('/forgot-password', limitePorMinuto(5), validar({ body: esquemaOlvide }), c.olvide);
   router.post(
     '/reset-password',
