@@ -1,0 +1,131 @@
+:host {
+  display: block;
+}
+.tabla-mes {
+  overflow-x: auto;
+}
+.fila {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  min-width: 42rem;
+}
+.encabezado > div {
+  padding: 8px 4px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: capitalize;
+  color: var(--texto-suave);
+}
+.celda {
+  display: flex;
+  min-height: 104px;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--borde);
+  margin: -1px 0 0 -1px;
+}
+.celda.fuera {
+  background: var(--superficie-suave);
+}
+.celda.fuera .numero {
+  color: var(--texto-suave);
+}
+.celda.hoy,
+.dia-semana.hoy {
+  outline: 2px solid var(--primario);
+  outline-offset: -2px;
+}
+.numero {
+  align-self: flex-end;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: inherit;
+  text-decoration: none;
+}
+a.numero:hover {
+  background: var(--superficie-suave);
+}
+.chip {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  text-decoration: none;
+}
+.chip lucide-icon {
+  flex-shrink: 0;
+}
+.chip .texto {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chip:hover {
+  filter: brightness(0.92);
+}
+.tachado {
+  text-decoration: line-through;
+}
+.mas {
+  padding: 2px 6px;
+  border: 0;
+  background: none;
+  color: var(--primario);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.mas:hover {
+  text-decoration: underline;
+}
+.semana {
+  display: grid;
+  gap: 8px;
+}
+@media (min-width: 768px) {
+  .semana {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+}
+.dia-semana {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+}
+.titulo-dia {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.titulo-dia.hoy {
+  color: var(--primario);
+}
+.sin-eventos {
+  margin: 0;
+  font-size: 13px;
+}
+.grupo-lista + .grupo-lista {
+  margin-top: 12px;
+}
+.grupo-lista .titulo-dia {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--superficie-suave);
+}
+.vacio {
+  padding: 32px 0;
+  text-align: center;
+}

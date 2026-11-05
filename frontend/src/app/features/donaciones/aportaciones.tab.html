@@ -1,0 +1,178 @@
+<section class="tarjeta tarjeta-cuerpo total">
+  <p class="texto-suave etiqueta">Total del filtro (sin anuladas)</p>
+  @if (consulta.isLoading() && !consulta.hasValue()) {
+    <p class="monto texto-suave">…</p>
+  } @else {
+    <p class="monto" aria-live="polite">{{ moneda.formato(consulta.value()?.meta?.totalMonto) }}</p>
+  }
+  @if (consulta.value(); as r) {
+    <p class="texto-suave pequeno">
+      {{ r.meta.total }} {{ r.meta.total === 1 ? 'registro' : 'registros' }}
+    </p>
+  }
+</section>
+
+<div class="filtros" role="search">
+  <div class="rango">
+    <mat-form-field subscriptSizing="dynamic" class="fecha">
+      <mat-label>Desde</mat-label>
+      <input
+        matInput
+        type="date"
+        [value]="rango().desde ?? ''"
+        (change)="cambiarFecha('desde', $event)"
+      />
+    </mat-form-field>
+    <mat-form-field subscriptSizing="dynamic" class="fecha">
+      <mat-label>Hasta</mat-label>
+      <input
+        matInput
+        type="date"
+        [value]="rango().hasta ?? ''"
+        (change)="cambiarFecha('hasta', $event)"
+      />
+    </mat-form-field>
+    @for (p of presets(); track p.etiqueta) {
+      <button
+        matButton="tonal"
+        type="button"
+        (click)="filtros.cambiar({ desde: p.desde, hasta: p.hasta })"
+      >
+        {{ p.etiqueta }}
+      </button>
+    }
+  </div>
+  <mat-form-field subscriptSizing="dynamic" class="select-filtro">
+    <mat-label>Concepto</mat-label>
+    <mat-select
+      [value]="filtros.valores().concepto"
+      (valueChange)="filtros.cambiar({ concepto: $event })"
+    >
+      <mat-option value="">Todos los conceptos</mat-option>
+      @for (o of opcionesConcepto; track o.valor) {
+        <mat-option [value]="o.valor">{{ o.etiqueta }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field subscriptSizing="dynamic" class="select-filtro">
+    <mat-label>Método</mat-label>
+    <mat-select
+      [value]="filtros.valores().metodo"
+      (valueChange)="filtros.cambiar({ metodo: $event })"
+    >
+      <mat-option value="">Todos los métodos</mat-option>
+      @for (o of opcionesMetodo; track o.valor) {
+        <mat-option [value]="o.valor">{{ o.etiqueta }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+  <div class="donante">
+    <app-selector-miembros
+      etiqueta="Donante"
+      placeholder="Cualquier donante"
+      [incluirInactivos]="true"
+      [seleccion]="miembroSeleccion()"
+      (seleccionChange)="filtros.cambiar({ miembroId: $event[0] ?? '' })"
+    />
+  </div>
+  <mat-checkbox
+    [checked]="filtros.valores().anonimas"
+    (change)="filtros.cambiar({ anonimas: $event.checked })"
+    >Solo anónimas</mat-checkbox
+  >
+  <mat-checkbox
+    [checked]="filtros.valores().anuladas"
+    (change)="filtros.cambiar({ anuladas: $event.checked })"
+    >Incluir anuladas</mat-checkbox
+  >
+  <div class="exportar">
+    <app-boton-exportar tipo="ingresos" [filtros]="filtrosReporte()" />
+    <p class="texto-suave pequeno">Exporta todas las aportaciones del rango.</p>
+  </div>
+</div>
+
+<section class="tarjeta">
+  @if (consulta.isLoading() && !consulta.hasValue()) {
+    <app-esqueleto [filas]="6" [columnas]="5" />
+  } @else if (consulta.error()) {
+    <app-estado-error [error]="consulta.error()" (reintentar)="consulta.reload()" />
+  } @else if (datos().length === 0) {
+    <app-estado-vacio
+      [icono]="iconos.Coins"
+      titulo="No hay aportaciones en este periodo"
+      descripcion="Cambia los filtros o registra una nueva aportación."
+    >
+      <button
+        *appPuede="'donaciones:crear'"
+        matButton="filled"
+        type="button"
+        (click)="registrar.emit()"
+      >
+        Registrar aportación
+      </button>
+    </app-estado-vacio>
+  } @else {
+    <div class="contenedor-tabla">
+      <table mat-table [dataSource]="datos()" aria-label="Aportaciones">
+        <ng-container matColumnDef="fecha">
+          <th mat-header-cell *matHeaderCellDef>Fecha</th>
+          <td mat-cell *matCellDef="let d">
+            <span [class.anulada]="d.anulada">{{ fecha(d.fecha) }}</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="donante">
+          <th mat-header-cell *matHeaderCellDef>Donante</th>
+          <td mat-cell *matCellDef="let d">
+            <span [class.anulada]="d.anulada">{{ donante(d) }}</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="concepto">
+          <th mat-header-cell *matHeaderCellDef>Concepto</th>
+          <td mat-cell *matCellDef="let d">
+            <span [class.anulada]="d.anulada">{{ concepto(d) }}</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="metodo">
+          <th mat-header-cell *matHeaderCellDef>Método</th>
+          <td mat-cell *matCellDef="let d">
+            <span [class.anulada]="d.anulada">{{ metodo(d) }}</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="monto">
+          <th mat-header-cell *matHeaderCellDef class="num">Monto</th>
+          <td mat-cell *matCellDef="let d" class="num">
+            <span [class.anulada]="d.anulada">{{ moneda.formato(d.monto) }}</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="estado">
+          <th mat-header-cell *matHeaderCellDef>Estado</th>
+          <td mat-cell *matCellDef="let d">
+            @if (d.anulada) {
+              <app-badge-estado etiqueta="Anulada" variante="peligro" />
+            } @else {
+              <app-badge-estado etiqueta="Registrada" variante="neutro" />
+            }
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="acciones">
+          <th mat-header-cell *matHeaderCellDef><span class="sr-only">Acciones</span></th>
+          <td mat-cell *matCellDef="let d" class="acciones">
+            <button
+              matIconButton
+              type="button"
+              [attr.aria-label]="
+                'Ver detalle de la aportación de ' + donante(d) + ' del ' + fecha(d.fecha)
+              "
+              (click)="ver.emit(d.id)"
+            >
+              <lucide-icon [img]="iconos.Eye" [size]="18" aria-hidden="true" />
+            </button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+        <tr mat-row *matRowDef="let fila; columns: columnas"></tr>
+      </table>
+    </div>
+    <app-paginacion [meta]="consulta.value()!.meta" (cambio)="filtros.cambiar({ page: $event })" />
+  }
+</section>

@@ -1,0 +1,130 @@
+<div class="cartelera" [class.pantalla]="pantalla()">
+  <header class="encabezado">
+    <div class="encabezado-contenido">
+      <div class="marca">
+        @if (datos()?.iglesia?.logoUrl; as logo) {
+          <img [src]="logo" alt="" class="logo" />
+        }
+        <div>
+          <h1>{{ datos()?.iglesia?.nombre ?? 'Cartelera' }}</h1>
+          <p class="texto-suave">Anuncios, próximos eventos y horarios</p>
+        </div>
+      </div>
+      @if (!pantalla()) {
+        <a routerLink="/login" class="acceso">
+          <lucide-icon [img]="iconos.LogIn" [size]="16" aria-hidden="true" /> Acceso del personal
+        </a>
+      }
+    </div>
+  </header>
+
+  <main class="principal">
+    @if (consulta.isLoading() && !consulta.hasValue()) {
+      <section class="tarjeta ancho"><app-esqueleto [filas]="4" [columnas]="2" /></section>
+    } @else if (consulta.error()) {
+      <section class="tarjeta ancho">
+        <app-estado-error [error]="consulta.error()" (reintentar)="consulta.reload()" />
+      </section>
+    } @else if (datos(); as d) {
+      <section aria-labelledby="titulo-anuncios" class="anuncios">
+        <h2 id="titulo-anuncios">Anuncios</h2>
+        @if (d.anuncios.length === 0) {
+          <section class="tarjeta"><app-estado-vacio titulo="No hay anuncios por ahora" /></section>
+        } @else {
+          <ul class="lista">
+            @for (a of d.anuncios; track a.id) {
+              <li><app-tarjeta-anuncio [anuncio]="a" /></li>
+            }
+          </ul>
+        }
+      </section>
+
+      <div class="lateral">
+        <section aria-labelledby="titulo-eventos" class="tarjeta tarjeta-cuerpo">
+          <h2 id="titulo-eventos" class="titulo-seccion">
+            <lucide-icon [img]="iconos.CalendarDays" [size]="20" aria-hidden="true" /> Próximos
+            eventos
+          </h2>
+          @if (d.eventosProximos.length === 0) {
+            <p class="texto-suave">No hay eventos programados.</p>
+          } @else {
+            <ul class="eventos">
+              @for (e of d.eventosProximos; track e.id) {
+                <li class="evento">
+                  <span class="icono" [class]="'icono cat-' + e.categoria">
+                    <lucide-icon
+                      [img]="iconoCategoria[e.categoria]"
+                      [size]="16"
+                      aria-hidden="true"
+                    />
+                  </span>
+                  <div class="textos">
+                    <p class="nombre">{{ e.titulo }}</p>
+                    <p class="texto-suave detalle">
+                      {{ categorias[e.categoria] }} · {{ fechaHora(e.fechaInicio) }}
+                    </p>
+                    <p class="texto-suave detalle con-icono">
+                      <lucide-icon [img]="iconos.MapPin" [size]="14" aria-hidden="true" />
+                      {{ e.lugar }}
+                    </p>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        <section aria-labelledby="titulo-horarios" class="tarjeta tarjeta-cuerpo">
+          <h2 id="titulo-horarios" class="titulo-seccion">
+            <lucide-icon [img]="iconos.Clock" [size]="20" aria-hidden="true" /> Horarios de reunión
+          </h2>
+          @if (d.horarios.length === 0) {
+            <p class="texto-suave">Sin horarios publicados.</p>
+          } @else {
+            <ul class="horarios">
+              @for (h of d.horarios; track h.id) {
+                <li>
+                  <p class="nombre">{{ h.nombre }}</p>
+                  <p class="texto-suave detalle">
+                    {{ dias[h.diaSemana] }} {{ h.horaInicio }}{{ h.horaFin ? '–' + h.horaFin : ''
+                    }}{{ h.lugar ? ' · ' + h.lugar : '' }}
+                  </p>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        <section aria-labelledby="titulo-contacto" class="tarjeta tarjeta-cuerpo">
+          <h2 id="titulo-contacto" class="titulo-seccion">Contacto</h2>
+          <ul class="contacto">
+            @if (direccion()) {
+              <li>
+                <lucide-icon [img]="iconos.MapPin" [size]="16" aria-hidden="true" />
+                {{ direccion() }}
+              </li>
+            }
+            @if (d.iglesia.telefono; as telefono) {
+              <li>
+                <lucide-icon [img]="iconos.Phone" [size]="16" aria-hidden="true" />
+                <a [href]="'tel:' + telefono">{{ telefono }}</a>
+              </li>
+            }
+            @if (d.iglesia.email; as email) {
+              <li>
+                <lucide-icon [img]="iconos.Mail" [size]="16" aria-hidden="true" />
+                <a [href]="'mailto:' + email">{{ email }}</a>
+              </li>
+            }
+            @if (d.iglesia.sitioWeb; as sitio) {
+              <li>
+                <lucide-icon [img]="iconos.Globe" [size]="16" aria-hidden="true" />
+                <a [href]="sitio" target="_blank" rel="noopener noreferrer">{{ sitio }}</a>
+              </li>
+            }
+          </ul>
+        </section>
+      </div>
+    }
+  </main>
+</div>

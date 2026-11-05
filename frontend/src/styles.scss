@@ -266,3 +266,55 @@ button .lucide,
 a .lucide {
   vertical-align: middle;
 }
+
+/* ───────── Eventos (F3): color por categoría; siempre acompañado de ícono y texto ───────── */
+.cat-CULTO {
+  background: var(--primario);
+  color: var(--primario-texto);
+}
+.cat-REUNION {
+  background: var(--acento);
+  color: var(--acento-texto);
+}
+.cat-ACTIVIDAD {
+  background: var(--exito);
+  color: var(--superficie);
+}
+.cat-OTRO {
+  background: var(--texto-suave);
+  color: var(--superficie);
+}
+.cat-CANCELADO {
+  background: var(--superficie-suave);
+  color: var(--texto-suave);
+}
+
+/* ───────── Tabla simple (resúmenes, vista previa de reportes, "ver como tabla") ───────── */
+.tabla-simple {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.tabla-simple caption {
+  padding: 0 0 8px;
+  text-align: left;
+  font-weight: 500;
+}
+.tabla-simple th,
+.tabla-simple td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--borde);
+  text-align: left;
+}
+.tabla-simple th {
+  color: var(--texto-suave);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.tabla-simple .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.tabla-simple tfoot td {
+  font-weight: 600;
+}

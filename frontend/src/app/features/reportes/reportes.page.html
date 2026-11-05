@@ -1,0 +1,161 @@
+@if (info(); as i) {
+  <app-page-header [titulo]="'Reporte de ' + i.titulo.toLowerCase()" [descripcion]="i.descripcion">
+    <a routerLink="/reportes" class="volver">
+      <lucide-icon [img]="iconoVolver" [size]="16" aria-hidden="true" /> Todos los reportes
+    </a>
+    <app-boton-exportar [tipo]="i.tipo" [filtros]="filtros()" />
+  </app-page-header>
+
+  <div class="filtros" role="search">
+    @switch (i.tipo) {
+      @case ('miembros') {
+        <mat-form-field subscriptSizing="dynamic" class="select-filtro">
+          <mat-label>Estado de los miembros</mat-label>
+          <mat-select
+            [value]="url.valores().estado"
+            (valueChange)="url.cambiar({ estado: $event })"
+          >
+            <mat-option value="activo">Activos</mat-option>
+            <mat-option value="inactivo">Inactivos</mat-option>
+            <mat-option value="todos">Todos</mat-option>
+          </mat-select>
+        </mat-form-field>
+      }
+      @case ('asistencia') {
+        <mat-form-field subscriptSizing="dynamic" class="select-filtro">
+          <mat-label>Tipo de reporte</mat-label>
+          <mat-select [value]="modoAsistencia()" (valueChange)="url.cambiar({ modo: $event })">
+            <mat-option value="periodo">Por periodo</mat-option>
+            <mat-option value="evento">Por evento</mat-option>
+          </mat-select>
+        </mat-form-field>
+        @if (modoAsistencia() === 'evento') {
+          <mat-form-field subscriptSizing="dynamic" class="select-ancho">
+            <mat-label>Evento</mat-label>
+            <mat-select
+              [value]="url.valores().eventoId"
+              (valueChange)="url.cambiar({ eventoId: $event })"
+              placeholder="Elige un evento…"
+            >
+              @for (e of opcionesEvento(); track e.id) {
+                <mat-option [value]="e.id"
+                  >{{ e.titulo }} ({{ fechaHora(e.fechaInicio) }})</mat-option
+                >
+              }
+            </mat-select>
+          </mat-form-field>
+        } @else {
+          <ng-container *ngTemplateOutlet="rango" />
+          <mat-form-field subscriptSizing="dynamic" class="select-filtro">
+            <mat-label>Periodo</mat-label>
+            <mat-select
+              [value]="url.valores().periodo"
+              (valueChange)="url.cambiar({ periodo: $event })"
+            >
+              <mat-option value="semanal">Semanal</mat-option>
+              <mat-option value="mensual">Mensual</mat-option>
+            </mat-select>
+          </mat-form-field>
+        }
+      }
+      @case ('ministerios') {
+        <mat-form-field subscriptSizing="dynamic" class="select-ancho">
+          <mat-label>Ministerio</mat-label>
+          <mat-select
+            [value]="url.valores().ministerioId"
+            (valueChange)="url.cambiar({ ministerioId: $event })"
+          >
+            <mat-option value="">Todos los ministerios</mat-option>
+            @for (m of opcionesMinisterio(); track m.id) {
+              <mat-option [value]="m.id">{{ m.nombre }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <ng-container *ngTemplateOutlet="rango" />
+      }
+      @case ('ingresos') {
+        <ng-container *ngTemplateOutlet="rango" />
+        <mat-form-field subscriptSizing="dynamic" class="select-filtro">
+          <mat-label>Agrupar por</mat-label>
+          <mat-select
+            [value]="url.valores().agrupar"
+            (valueChange)="url.cambiar({ agrupar: $event })"
+          >
+            @for (o of opcionesAgrupar; track o.valor) {
+              <mat-option [value]="o.valor">{{ o.etiqueta }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+    }
+  </div>
+
+  @if (falta()) {
+    <section class="tarjeta">
+      <app-estado-vacio
+        titulo="Elige un evento"
+        descripcion="Selecciona el evento del que quieres ver el pase de lista."
+      />
+    </section>
+  } @else {
+    <app-vista-previa-reporte
+      [reporte]="consulta.hasValue() ? consulta.value() : undefined"
+      [cargando]="consulta.isLoading() && !consulta.hasValue()"
+      [error]="consulta.error()"
+      (reintentar)="consulta.reload()"
+    />
+  }
+
+  <ng-template #rango>
+    <mat-form-field subscriptSizing="dynamic" class="fecha">
+      <mat-label>Desde</mat-label>
+      <input
+        matInput
+        type="date"
+        [value]="filtros().desde ?? ''"
+        (change)="fecha('desde', $event)"
+      />
+    </mat-form-field>
+    <mat-form-field subscriptSizing="dynamic" class="fecha">
+      <mat-label>Hasta</mat-label>
+      <input
+        matInput
+        type="date"
+        [value]="filtros().hasta ?? ''"
+        (change)="fecha('hasta', $event)"
+      />
+    </mat-form-field>
+  </ng-template>
+} @else if (pedido()) {
+  <app-page-header titulo="Reportes" />
+  <section class="tarjeta">
+    <app-estado-vacio
+      titulo="No tienes acceso a este reporte"
+      descripcion="Tu rol no incluye este reporte. Elige uno de los disponibles."
+    >
+      <a routerLink="/reportes">Ver mis reportes</a>
+    </app-estado-vacio>
+  </section>
+} @else {
+  <app-page-header
+    titulo="Reportes"
+    descripcion="Consulta un reporte en pantalla y descárgalo en PDF o Excel."
+  />
+  <ul aria-label="Reportes disponibles" class="tarjetas">
+    @for (r of permitidos(); track r.tipo) {
+      <li>
+        <a [routerLink]="['/reportes']" [queryParams]="{ tipo: r.tipo }" class="enlace-tarjeta">
+          <article class="tarjeta tarjeta-cuerpo reporte">
+            <span class="icono"
+              ><lucide-icon [img]="r.icono" [size]="20" aria-hidden="true"
+            /></span>
+            <div>
+              <h2 class="tarjeta-titulo">{{ r.titulo }}</h2>
+              <p class="texto-suave">{{ r.descripcion }}</p>
+            </div>
+          </article>
+        </a>
+      </li>
+    }
+  </ul>
+}

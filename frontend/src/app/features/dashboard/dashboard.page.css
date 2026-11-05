@@ -1,0 +1,90 @@
+.rejilla {
+  display: grid;
+  gap: 24px;
+}
+@media (min-width: 1280px) {
+  .rejilla {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+.principal,
+.lateral {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 24px;
+}
+.indicadores {
+  display: grid;
+  gap: 16px;
+}
+@media (min-width: 640px) {
+  .indicadores {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1280px) {
+  .indicadores {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1536px) {
+  .indicadores {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.enlace-indicador {
+  display: block;
+  border-radius: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+.enlace-indicador:focus-visible {
+  outline: 2px solid var(--anillo);
+  outline-offset: 2px;
+}
+.enlace-indicador:hover app-stat-card {
+  filter: brightness(0.97);
+}
+.variacion {
+  font-weight: 500;
+}
+.graficas {
+  display: grid;
+  gap: 24px;
+}
+@media (min-width: 1280px) {
+  .graficas {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.esqueleto-grafica {
+  min-height: 20rem;
+  background: var(--superficie-suave);
+}
+.cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.cabecera .tarjeta-titulo {
+  margin: 0;
+}
+.cabecera a {
+  font-size: 14px;
+}
+.avisos {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.avisos p {
+  margin: 0;
+}
+.sin-avisos {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

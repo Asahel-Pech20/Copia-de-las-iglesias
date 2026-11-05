@@ -1,0 +1,237 @@
+<app-page-header [titulo]="titulo()" descripcion="Resumen de la actividad de la iglesia." />
+
+@if (consulta.error()) {
+  <section class="tarjeta">
+    <app-estado-error [error]="consulta.error()" (reintentar)="consulta.reload()" />
+  </section>
+} @else {
+  <div class="rejilla">
+    <div class="principal">
+      <section aria-label="Indicadores" class="indicadores">
+        <ng-template #enlace let-ruta="ruta" let-nombre="nombre" let-contenido="contenido">
+          @if (ruta) {
+            <a [routerLink]="ruta" [attr.aria-label]="nombre" class="enlace-indicador">
+              <ng-container *ngTemplateOutlet="contenido" />
+            </a>
+          } @else {
+            <ng-container *ngTemplateOutlet="contenido" />
+          }
+        </ng-template>
+
+        <ng-template #miembros>
+          <app-stat-card
+            titulo="Miembros activos"
+            [valor]="d() ? numero(d()!.miembrosActivos) : undefined"
+            [icono]="iconos.Users"
+            [cargando]="!d()"
+          />
+        </ng-template>
+        <ng-container
+          *ngTemplateOutlet="
+            enlace;
+            context: {
+              ruta: verMiembros() ? '/miembros' : null,
+              nombre: 'Miembros activos: ir a miembros',
+              contenido: miembros,
+            }
+          "
+        />
+
+        <ng-template #asistencias>
+          <app-stat-card
+            titulo="Asistencias del mes"
+            [valor]="d() ? numero(d()!.asistenciasRegistradas.mesActual) : undefined"
+            [icono]="iconos.ClipboardCheck"
+            [cargando]="!d()"
+          >
+            @if (d(); as x) {
+              Esta semana: {{ numero(x.asistenciasRegistradas.semanaActual) }}
+            }
+          </app-stat-card>
+        </ng-template>
+        <ng-container
+          *ngTemplateOutlet="
+            enlace;
+            context: {
+              ruta: verAsistencia() ? '/asistencia' : null,
+              nombre: 'Asistencias del mes: ir a asistencia',
+              contenido: asistencias,
+            }
+          "
+        />
+
+        <ng-template #ministeriosCard>
+          <app-stat-card
+            titulo="Ministerios"
+            [valor]="d() ? numero(d()!.totalMinisterios) : undefined"
+            [icono]="iconos.Network"
+            [cargando]="!d()"
+          />
+        </ng-template>
+        <ng-container
+          *ngTemplateOutlet="
+            enlace;
+            context: {
+              ruta: verMinisterios() ? '/ministerios' : null,
+              nombre: 'Ministerios: ir a ministerios',
+              contenido: ministeriosCard,
+            }
+          "
+        />
+
+        <!-- ingresos solo existe en la respuesta si el rol puede verlos: sin la clave, no hay tarjeta ni hueco -->
+        @if (d()?.ingresos; as ingresos) {
+          <ng-template #ingresosCard>
+            <app-stat-card
+              titulo="Ingresos del mes"
+              [valor]="moneda.formato(ingresos.mesActual)"
+              [icono]="iconos.Banknote"
+            >
+              @if (ingresos.variacionPorcentual === null) {
+                Sin datos del mes anterior
+              } @else {
+                <span
+                  class="variacion"
+                  [class.texto-exito]="ingresos.variacionPorcentual >= 0"
+                  [class.texto-peligro]="ingresos.variacionPorcentual < 0"
+                >
+                  {{ ingresos.variacionPorcentual >= 0 ? '▲' : '▼' }}
+                  {{ variacion(ingresos.variacionPorcentual) }} vs. mes anterior
+                </span>
+              }
+            </app-stat-card>
+          </ng-template>
+          <ng-container
+            *ngTemplateOutlet="
+              enlace;
+              context: {
+                ruta: verDonaciones() ? '/donaciones' : null,
+                nombre: 'Ingresos del mes: ir a donaciones',
+                contenido: ingresosCard,
+              }
+            "
+          />
+        }
+      </section>
+
+      @if (d(); as x) {
+        <section aria-label="Gráficas" class="graficas">
+          <app-tarjeta-grafica
+            titulo="Asistencia semanal"
+            [descripcion]="
+              'Presentes por semana en las últimas ' +
+              asistencia().length +
+              ' semanas: ' +
+              numero(totalAsistencia()) +
+              ' en total.'
+            "
+            [encabezados]="['Semana', 'Presentes', 'Ausentes', 'Eventos']"
+            [filas]="filasAsistencia()"
+          >
+            <app-grafica-barras [datos]="puntosAsistencia()" />
+          </app-tarjeta-grafica>
+
+          <app-tarjeta-grafica
+            titulo="Miembros por ministerio"
+            [descripcion]="descMinisterios()"
+            [vacio]="ministerios().length === 0 ? 'Aún no hay ministerios.' : undefined"
+            [encabezados]="['Ministerio', 'Integrantes']"
+            [filas]="filasMinisterios()"
+          >
+            <app-grafica-barras
+              [horizontal]="true"
+              color="var(--acento)"
+              [datos]="puntosMinisterios()"
+            />
+          </app-tarjeta-grafica>
+
+          <app-tarjeta-grafica
+            titulo="Altas de miembros por mes"
+            [descripcion]="
+              totalAltas() +
+              (totalAltas() === 1 ? ' alta' : ' altas') +
+              ' en los últimos ' +
+              altas().length +
+              ' meses.'
+            "
+            [encabezados]="['Mes', 'Altas']"
+            [filas]="filasAltas()"
+          >
+            <app-grafica-barras color="var(--exito)" [datos]="puntosAltas()" />
+          </app-tarjeta-grafica>
+
+          @if (x.ingresos; as ingresos) {
+            <app-tarjeta-grafica
+              titulo="Ingresos por mes"
+              [descripcion]="
+                'Ingresos de los últimos ' +
+                ingresosMes().length +
+                ' meses; este mes ' +
+                moneda.formato(ingresos.mesActual) +
+                '.'
+              "
+              [encabezados]="['Mes', 'Total']"
+              [filas]="filasIngresos()"
+            >
+              <app-grafica-barras
+                [datos]="puntosIngresos()"
+                [formatoValor]="moneda.formato"
+                [formatoEje]="compacto"
+              />
+            </app-tarjeta-grafica>
+          }
+        </section>
+      } @else {
+        <section aria-label="Cargando gráficas" class="graficas">
+          @for (i of [0, 1, 2, 3]; track i) {
+            <div
+              class="tarjeta tarjeta-cuerpo esqueleto-grafica"
+              role="status"
+              aria-label="Cargando"
+            ></div>
+          }
+        </section>
+      }
+    </div>
+
+    <aside aria-label="Eventos y avisos" class="lateral">
+      <section class="tarjeta tarjeta-cuerpo">
+        <div class="cabecera">
+          <h2 class="tarjeta-titulo">Próximos eventos</h2>
+          @if (verEventos()) {
+            <a routerLink="/eventos">Ver todos</a>
+          }
+        </div>
+        <app-lista-eventos
+          [eventos]="d()?.eventosProximos"
+          [cargando]="!d()"
+          vacio="No hay eventos próximos."
+          etiqueta="Próximos eventos"
+        />
+      </section>
+
+      <section class="tarjeta tarjeta-cuerpo">
+        <div class="cabecera">
+          <h2 class="tarjeta-titulo">Avisos importantes</h2>
+          @if (verAnuncios()) {
+            <a routerLink="/anuncios">Ver todos</a>
+          }
+        </div>
+        <div class="avisos">
+          @if (!d()) {
+            <p class="texto-suave">Cargando…</p>
+          } @else if (d()!.anunciosImportantes.length === 0) {
+            <p class="texto-suave sin-avisos">
+              <lucide-icon [img]="iconos.Megaphone" [size]="16" aria-hidden="true" /> No hay avisos
+              importantes.
+            </p>
+          } @else {
+            @for (a of d()!.anunciosImportantes; track a.id) {
+              <app-tarjeta-anuncio [anuncio]="a" [compacta]="true" />
+            }
+          }
+        </div>
+      </section>
+    </aside>
+  </div>
+}

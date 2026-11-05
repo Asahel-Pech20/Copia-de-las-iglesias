@@ -1,0 +1,170 @@
+.cartelera {
+  min-height: 100dvh;
+  background: var(--fondo);
+  color: var(--texto);
+}
+.cartelera.pantalla {
+  font-size: 18px;
+}
+.encabezado {
+  border-bottom: 1px solid var(--borde);
+  background: var(--superficie);
+}
+.encabezado-contenido {
+  display: flex;
+  max-width: 72rem;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 auto;
+  padding: 16px;
+}
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+.pantalla .logo {
+  width: 80px;
+  height: 80px;
+}
+h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+.pantalla h1 {
+  font-size: 24px;
+}
+.marca p {
+  margin: 0;
+  font-size: 14px;
+}
+.acceso {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  color: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+.acceso:hover {
+  background: var(--superficie-suave);
+}
+.acceso:focus-visible {
+  outline: 2px solid var(--anillo);
+  outline-offset: 2px;
+}
+.principal {
+  display: grid;
+  max-width: 72rem;
+  gap: 16px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+@media (min-width: 1024px) {
+  .principal {
+    grid-template-columns: 2fr 1fr;
+  }
+  .ancho {
+    grid-column: span 2;
+  }
+}
+.anuncios h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 600;
+}
+.pantalla .anuncios h2 {
+  font-size: 24px;
+}
+.lista,
+.eventos,
+.horarios,
+.contacto {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.lateral {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.titulo-seccion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.evento {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+}
+.evento + .evento {
+  border-top: 1px solid var(--borde);
+}
+.icono {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+.textos {
+  min-width: 0;
+}
+.nombre {
+  margin: 0;
+  font-weight: 500;
+}
+.detalle {
+  margin: 0;
+  font-size: 14px;
+}
+.pantalla .detalle {
+  font-size: 16px;
+}
+.con-icono {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.horarios {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.contacto {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+}
+.contacto li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}

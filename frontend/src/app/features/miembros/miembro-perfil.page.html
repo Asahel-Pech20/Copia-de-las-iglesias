@@ -75,26 +75,17 @@
       </div>
     </mat-tab>
 
-    <!-- Historial y % de asistencia: se conecta cuando F3 se migre a Angular -->
     <mat-tab label="Asistencia">
       <section class="tarjeta pestana">
-        <app-estado-vacio
-          [icono]="iconos.CalendarCheck"
-          titulo="Historial de asistencia"
-          descripcion="Aquí se mostrará la asistencia del miembro cuando el módulo de asistencia esté disponible."
-        />
+        <app-asistencia-del-miembro [miembroId]="miembro.id" />
       </section>
     </mat-tab>
 
-    <!-- Solo con donaciones:leer. Se conecta cuando F4 se migre a Angular -->
+    <!-- Solo con donaciones:leer: sin el permiso no se pide ningún dato financiero -->
     @if (verAportaciones()) {
       <mat-tab label="Aportaciones">
-        <section class="tarjeta pestana">
-          <app-estado-vacio
-            [icono]="iconos.HandCoins"
-            titulo="Aportaciones"
-            descripcion="Aquí se mostrarán las aportaciones del miembro cuando el módulo de donaciones esté disponible."
-          />
+        <section class="tarjeta tarjeta-cuerpo pestana">
+          <app-aportaciones-del-miembro [miembroId]="miembro.id" />
         </section>
       </mat-tab>
     }

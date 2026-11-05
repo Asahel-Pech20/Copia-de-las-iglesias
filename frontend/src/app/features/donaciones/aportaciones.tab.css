@@ -1,0 +1,64 @@
+.total {
+  margin-bottom: 16px;
+}
+.total p {
+  margin: 0;
+}
+.etiqueta {
+  font-size: 14px;
+}
+.monto {
+  margin-top: 4px;
+  font-size: 30px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.pequeno {
+  margin-top: 4px;
+  font-size: 12px;
+}
+.filtros {
+  flex-wrap: wrap;
+  align-items: center;
+}
+.rango {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.fecha {
+  width: 10rem;
+}
+.donante {
+  min-width: 14rem;
+}
+.exportar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.exportar p {
+  margin: 0;
+}
+@media (min-width: 640px) {
+  .exportar {
+    align-items: flex-end;
+    margin-left: auto;
+  }
+}
+@media (max-width: 639px) {
+  .fecha,
+  .donante {
+    width: 100%;
+  }
+}
+.anulada {
+  color: var(--texto-suave);
+  text-decoration: line-through;
+}
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

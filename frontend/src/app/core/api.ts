@@ -10,8 +10,10 @@ import { inject, Injectable } from '@angular/core';
 import {
   catchError,
   finalize,
+  from,
   map,
   type Observable,
+  of,
   shareReplay,
   switchMap,
   throwError,
@@ -52,6 +54,10 @@ export function esErrorApi(error: unknown): error is ErrorApi {
 /** Convierte cualquier error (HTTP, red, desconocido) al formato ErrorApi. */
 export function normalizarError(error: unknown): ErrorApi {
   if (esErrorApi(error)) return error;
+  // rxResource envuelve en un Error lo que lanza el stream: el error original va en `cause`
+  if (error instanceof Error && error.cause !== undefined && error.cause !== error) {
+    return normalizarError(error.cause);
+  }
   if (error instanceof HttpErrorResponse) {
     if (error.status === 0) {
       return {
@@ -100,6 +106,40 @@ function conToken(req: HttpRequest<unknown>, token: string | null) {
   });
 }
 
+/** Blob de cualquier realm (en las pruebas el Blob de jsdom y el de Node son clases distintas). */
+function esBlob(valor: unknown): valor is Blob {
+  return (
+    typeof valor === 'object' &&
+    valor !== null &&
+    'size' in valor &&
+    typeof (valor as Blob).text === 'function'
+  );
+}
+
+/**
+ * Con `responseType: 'blob'` el JSON de un error llega como Blob: se lee aquí para que el resto
+ * del interceptor (TOKEN_EXPIRED) y los servicios vean el mismo error que en una petición normal.
+ */
+function leerErrorBlob(error: unknown): Observable<unknown> {
+  if (!(error instanceof HttpErrorResponse) || !esBlob(error.error)) return of(error);
+  return from(error.error.text()).pipe(
+    map((texto): unknown => {
+      try {
+        return new HttpErrorResponse({
+          error: JSON.parse(texto) as unknown,
+          status: error.status,
+          statusText: error.statusText,
+          headers: error.headers,
+          url: error.url ?? undefined,
+        });
+      } catch {
+        return error;
+      }
+    }),
+    catchError(() => of(error)),
+  );
+}
+
 /** Agrega el access token, y si expiró lo renueva con la cookie y reintenta una vez. */
 export const interceptorApi: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
@@ -110,6 +150,9 @@ export const interceptorApi: HttpInterceptorFn = (
   const esRefresh = req.url.endsWith('/auth/refresh');
 
   return next(conToken(req, esRefresh ? null : accessToken)).pipe(
+    catchError((errorCrudo: unknown) =>
+      leerErrorBlob(errorCrudo).pipe(switchMap((e) => throwError(() => e))),
+    ),
     catchError((error: unknown) => {
       const expirado =
         error instanceof HttpErrorResponse &&

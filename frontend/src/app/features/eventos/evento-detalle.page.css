@@ -1,0 +1,81 @@
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: -12px 0 16px;
+}
+.categoria {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.rejilla {
+  display: grid;
+  gap: 16px;
+}
+@media (min-width: 1024px) {
+  .rejilla {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+.lateral {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.alerta {
+  margin: 0 0 16px;
+}
+.primera-mayuscula::first-letter {
+  text-transform: uppercase;
+}
+.lugar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.descripcion {
+  white-space: pre-line;
+}
+.cabecera-tarjeta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.responsables {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.enlace-discreto {
+  color: inherit;
+}
+.cifras {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0;
+  text-align: center;
+}
+.cifras dt {
+  font-size: 12px;
+  color: var(--texto-suave);
+}
+.cifras dd {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+.ver-historial {
+  display: inline-block;
+  margin-top: 8px;
+}
+.boton-peligro {
+  --mat-button-filled-container-color: var(--peligro);
+  --mat-button-filled-label-text-color: var(--peligro-texto);
+}

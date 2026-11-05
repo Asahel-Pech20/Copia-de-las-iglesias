@@ -29,8 +29,12 @@ function aRequest(req: HttpRequest<unknown>): Request {
 }
 
 async function aEvento(req: HttpRequest<unknown>, res: Response): Promise<HttpEvent<unknown>> {
-  const texto = await res.text();
-  const cuerpo: unknown = texto ? JSON.parse(texto) : null;
+  // Con responseType 'blob' (descargas) el cuerpo llega como Blob, también en los errores,
+  // igual que con el HttpClient real
+  const cuerpo: unknown =
+    req.responseType === 'blob'
+      ? await res.blob()
+      : await res.text().then((texto) => (texto ? (JSON.parse(texto) as unknown) : null));
   const headers = new HttpHeaders(Object.fromEntries(res.headers.entries()));
   if (!res.ok) {
     throw new HttpErrorResponse({ error: cuerpo, status: res.status, headers, url: req.url });

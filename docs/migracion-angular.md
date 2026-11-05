@@ -8,10 +8,10 @@
 |---|---|
 | **F1**: base, layout, sesión, permisos, usuarios, configuración | ✅ Migrado |
 | **F2**: miembros, ministerios, `SelectorMiembros` | ✅ Migrado |
-| **F3**: eventos, calendario, asistencia, anuncios, cartelera | ⏳ Pendiente (en el menú aparece deshabilitado) |
-| **F4**: donaciones, dashboard, reportes | ⏳ Pendiente (en el menú aparece deshabilitado) |
+| **F3**: eventos, calendario, asistencia, anuncios, cartelera | ✅ Migrado |
+| **F4**: donaciones, dashboard, reportes | ✅ Migrado |
 
-Verificado: 27 pruebas de frontend (`ng test`), lint, typecheck, formato y `ng build` en verde; pantallas revisadas en el navegador con mocks.
+Verificado: 82 pruebas de frontend (`ng test`), lint, typecheck, formato y `ng build` en verde; pantallas revisadas en el navegador con mocks.
 
 ¿Por qué Angular 21 y no 22? Angular 22 pide Node ≥ 24.15 y el equipo usa Node 22/24.12. Angular 21 funciona con ambos.
 
@@ -56,8 +56,17 @@ Usuarios de los mocks: `<rol>@iglesia.local` / `Iglesia123`. Para usar el backen
 4. Registrar las rutas en `app.routes.ts` con su permiso y quitar `pendiente: true` en `core/menu.ts`.
 5. Conectar lo que F2 dejó esperando: pestañas *Asistencia* y *Aportaciones* del perfil y *Actividades* del ministerio.
 
+## Decisiones de F3 y F4
+
+- **Calendario**: componente propio (`features/eventos/calendario-eventos`, mes / semana / lista) con date-fns, sin FullCalendar: la versión Angular de FullCalendar (v7) exige `temporal-polyfill` y cambia el empaquetado; no se agregan dependencias (AGENTS.md regla 8).
+- **Gráficas**: `compartido/graficas.ts` (barras y dona en HTML/CSS con los tokens de color, tabla alternativa "Ver como tabla"); sin Recharts.
+- **Descargas de reportes**: `ReportesService` usa `responseType: 'blob'`; `interceptorApi` lee el JSON de los errores que llegan como Blob (así funcionan el 422 y el refresh de token).
+- `rxResource` envuelve los errores del stream; `normalizarError` los desenvuelve por `cause`.
+- Conexiones de F2: pestañas *Asistencia* y *Aportaciones* del perfil y *Actividades* del ministerio ya usan `app-asistencia-del-miembro`, `app-aportaciones-del-miembro` y `app-actividades-ministerio`.
+- Rutas nuevas: `/eventos…`, `/asistencia`, `/anuncios`, `/donaciones`, `/reportes`, `/cartelera` (pública) y el dashboard en `/`.
+
 ## Pendientes conocidos
 
 - Catálogo de componentes `/_dev/ui` de React: no se migró.
-- Calendario (FullCalendar tiene versión para Angular) y gráficas (Recharts es solo de React): se eligen al migrar F3 y F4.
 - No se probó contra el backend real; solo con mocks.
+- `ng test` termina las pruebas en segundos pero en esta laptop el proceso no sale solo: usar `timeout`.

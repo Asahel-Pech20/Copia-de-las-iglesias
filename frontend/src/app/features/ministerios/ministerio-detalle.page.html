@@ -156,14 +156,9 @@
       </div>
     </mat-tab>
 
-    <!-- F2-11: se conecta con la lista de eventos cuando F3 se migre a Angular -->
     <mat-tab label="Actividades">
       <section class="tarjeta pestana">
-        <app-estado-vacio
-          [icono]="iconos.CalendarDays"
-          titulo="Actividades programadas"
-          descripcion="Aquí se mostrarán los próximos eventos y los pasados de este ministerio cuando el módulo de eventos esté disponible."
-        />
+        <app-actividades-ministerio [ministerioId]="ministerio.id" />
       </section>
     </mat-tab>
   </mat-tab-group>
