@@ -24,7 +24,7 @@ pnpm --filter frontend test     # pruebas (Vitest)
 pnpm --filter frontend build    # producción (sin mocks)
 ```
 
-Usuarios de los mocks: `<rol>@iglesia.local` / `Iglesia123`. Para usar el backend real: `usarMocks: false` en `frontend/src/environments/environment.ts`.
+Usuarios de los mocks: `<rol>@iglesia.local` / `Iglesia123`. Para usar el backend real (con `pnpm --filter backend dev` corriendo): `pnpm --filter frontend dev:real`. Probado el 2026-11-04: login, dashboard, aportación, evento y pase de lista contra el backend real, sin errores.
 
 ## Equivalencias React → Angular (para migrar F3 y F4)
 

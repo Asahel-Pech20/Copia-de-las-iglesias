@@ -97,7 +97,7 @@ Auditorías: `Auditorias/Auditoria_<n>/README.md` (índice) → `<Integrante>/{b
 
 ### Cómo levantar todo
 1. `docker compose up -d` · 2. `cp backend/.env.example backend/.env` (una vez) · 3. `pnpm install` · 4. `pnpm --filter backend db:deploy` y `db:seed` · 5. `pnpm dev`.
-- El frontend usa mocks por defecto en desarrollo; para usar el backend real: `usarMocks: false` en `frontend/src/environments/environment.ts`.
+- El frontend usa mocks por defecto en desarrollo; para usar el backend real: `pnpm --filter frontend dev:real` (usa `environment.real.ts`).
 - Usuarios: `<rol>@iglesia.local` / `SEED_PASSWORD` (backend real) o `Iglesia123` (mocks, `frontend/src/mocks/datos/b1.ts`).
 
 ## Pendientes / preguntas abiertas

@@ -7,7 +7,8 @@
     "dev": "ng serve --port 5173",
     "build": "node scripts/ng-terminar.mjs build",
     "test": "node scripts/ng-terminar.mjs test --watch=false",
-    "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.spec.json --noEmit"
+    "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.spec.json --noEmit",
+    "dev:real": "ng serve --port 5173 --configuration real"
   },
   "dependencies": {
     "@angular/cdk": "~21.2.14",
