@@ -185,6 +185,14 @@ describe('selección de evento y pase de lista (F3-06, F3-07)', () => {
         ?.presente,
     ).toBe(true);
     await esperarA(() => textoPagina().includes('Todo guardado'));
+
+    // Una marca guardada no se puede quitar (no se borraría en el servidor): solo cambiar
+    const presenteJose = () =>
+      document.querySelector<HTMLButtonElement>('button[aria-label="Presente: José Chan May"]')!;
+    await esperarA(() => textoPagina().includes('Guardada: solo se puede cambiar'));
+    presenteJose().click();
+    await esperarA(() => presenteJose().getAttribute('aria-pressed') === 'true');
+    expect(textoPagina()).toContain('Todo guardado');
   });
 
   it('evento cancelado: pantalla bloqueada con mensaje', async () => {

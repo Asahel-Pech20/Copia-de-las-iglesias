@@ -74,7 +74,12 @@
         <ul aria-label="Lista de asistencia" class="lista">
           @for (r of visibles(); track r.miembro.id) {
             <li class="fila-miembro">
-              <span class="nombre">{{ r.miembro.nombre }} {{ r.miembro.apellidos }}</span>
+              <span class="nombre">
+                {{ r.miembro.nombre }} {{ r.miembro.apellidos }}
+                @if (guardada(r.miembro.id)) {
+                  <small class="texto-suave guardada">Guardada: solo se puede cambiar</small>
+                }
+              </span>
               <div
                 role="group"
                 class="botones"

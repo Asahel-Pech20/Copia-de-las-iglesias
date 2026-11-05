@@ -147,9 +147,18 @@ export class PaseListaPage implements ConCambiosSinGuardar {
   }
 
   protected marcar(miembroId: string, valor: boolean) {
-    this.marcas.update((actual) =>
-      new Map(actual).set(miembroId, actual.get(miembroId) === valor ? null : valor),
-    );
+    // Una marca ya guardada se cambia entre presente y ausente, pero no se puede dejar vacía:
+    // el contrato no borra asistencias, así que quitarla parecería guardado sin serlo
+    const guardada = this.inicial().get(miembroId) ?? null;
+    this.marcas.update((actual) => {
+      const quitar = actual.get(miembroId) === valor && guardada === null;
+      return new Map(actual).set(miembroId, quitar ? null : valor);
+    });
+  }
+
+  /** ¿El miembro ya tiene asistencia guardada? (su marca no se puede quitar, solo cambiar) */
+  protected guardada(miembroId: string) {
+    return (this.inicial().get(miembroId) ?? null) !== null;
   }
 
   protected marcarTodos(valor: boolean, soloSinMarcar: boolean) {
