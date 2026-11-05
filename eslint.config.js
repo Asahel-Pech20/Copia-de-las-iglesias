@@ -33,7 +33,8 @@ export default tseslint.config(
     languageOptions: { globals: globals.node },
   },
   {
-    files: ['.claude/hooks/**/*.mjs', 'scripts/**/*.mjs'],
+    files: ['.claude/hooks/**/*.mjs', 'scripts/**/*.mjs', 'frontend/scripts/**/*.mjs'],
+    languageOptions: { globals: globals.node },
     rules: { 'no-console': 'off' },
   },
   {
