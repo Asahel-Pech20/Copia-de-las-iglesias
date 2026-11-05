@@ -1,0 +1,134 @@
+<app-page-header
+  [titulo]="evento() ? 'Pase de lista: ' + evento()!.titulo : 'Pase de lista'"
+  [descripcion]="descripcion()"
+>
+  <a matButton="outlined" [routerLink]="['/eventos', id()]">
+    <lucide-icon [img]="iconos.ArrowLeft" [size]="16" aria-hidden="true" /> Evento
+  </a>
+</app-page-header>
+
+@if (consulta.isLoading() && !consulta.hasValue()) {
+  <section class="tarjeta"><app-esqueleto [filas]="6" [columnas]="2" /></section>
+} @else if (consulta.error()) {
+  <section class="tarjeta">
+    <app-estado-error [error]="consulta.error()" (reintentar)="consulta.reload()" />
+  </section>
+} @else if (evento()?.estado === 'CANCELADO') {
+  <section class="tarjeta">
+    <app-estado-vacio
+      [icono]="iconos.Ban"
+      titulo="Este evento está cancelado"
+      descripcion="No se puede registrar asistencia en un evento cancelado."
+    >
+      <a matButton="outlined" [routerLink]="['/eventos', id()]">Ver evento</a>
+    </app-estado-vacio>
+  </section>
+} @else {
+  <div class="contenido">
+    <p aria-live="polite" class="conteo">
+      <span class="texto-exito">{{ conteo().presentes }} presentes</span> ·
+      <span class="texto-peligro">{{ conteo().ausentes }} ausentes</span> ·
+      <span class="texto-suave">{{ conteo().sin }} sin marcar</span> de {{ conteo().total }}
+    </p>
+
+    <div class="herramientas">
+      <app-campo-busqueda
+        placeholder="Buscar miembro…"
+        [demoraMs]="150"
+        [valor]="busqueda()"
+        (cambio)="busqueda.set($event)"
+      />
+      <mat-button-toggle-group
+        aria-label="Filtrar lista"
+        hideSingleSelectionIndicator
+        [value]="filtro()"
+        (change)="filtro.set($event.value)"
+      >
+        @for (f of filtros; track f.valor) {
+          <mat-button-toggle [value]="f.valor">{{ f.etiqueta }}</mat-button-toggle>
+        }
+      </mat-button-toggle-group>
+    </div>
+
+    @if (puedeRegistrar()) {
+      <div class="masivas">
+        <button matButton="outlined" type="button" (click)="marcarTodos(true, false)">
+          <lucide-icon [img]="iconos.CheckCheck" [size]="16" aria-hidden="true" /> Marcar todos
+          presentes
+        </button>
+        <button matButton="outlined" type="button" (click)="marcarTodos(false, true)">
+          <lucide-icon [img]="iconos.X" [size]="16" aria-hidden="true" /> Marcar restantes como
+          ausentes
+        </button>
+      </div>
+    }
+
+    @if (errorServidor()) {
+      <p class="alerta alerta-peligro" role="alert">{{ errorServidor() }}</p>
+    }
+
+    <section class="tarjeta">
+      @if (visibles().length === 0) {
+        <app-estado-vacio titulo="No hay miembros con estos filtros" />
+      } @else {
+        <ul aria-label="Lista de asistencia" class="lista">
+          @for (r of visibles(); track r.miembro.id) {
+            <li class="fila-miembro">
+              <span class="nombre">{{ r.miembro.nombre }} {{ r.miembro.apellidos }}</span>
+              <div
+                role="group"
+                class="botones"
+                [attr.aria-label]="'Asistencia de ' + r.miembro.nombre + ' ' + r.miembro.apellidos"
+              >
+                <button
+                  type="button"
+                  class="marca presente"
+                  [class.activa]="marcaDe(r.miembro.id) === true"
+                  [attr.aria-pressed]="marcaDe(r.miembro.id) === true"
+                  [attr.aria-label]="'Presente: ' + r.miembro.nombre + ' ' + r.miembro.apellidos"
+                  [disabled]="!puedeRegistrar()"
+                  (click)="marcar(r.miembro.id, true)"
+                >
+                  <lucide-icon [img]="iconos.Check" [size]="20" aria-hidden="true" />
+                  <span class="texto">Presente</span>
+                </button>
+                <button
+                  type="button"
+                  class="marca ausente"
+                  [class.activa]="marcaDe(r.miembro.id) === false"
+                  [attr.aria-pressed]="marcaDe(r.miembro.id) === false"
+                  [attr.aria-label]="'Ausente: ' + r.miembro.nombre + ' ' + r.miembro.apellidos"
+                  [disabled]="!puedeRegistrar()"
+                  (click)="marcar(r.miembro.id, false)"
+                >
+                  <lucide-icon [img]="iconos.X" [size]="20" aria-hidden="true" />
+                  <span class="texto">Ausente</span>
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+
+  <!-- Guardado explícito con barra fija inferior, al alcance del pulgar -->
+  @if (puedeRegistrar()) {
+    <div class="barra-guardar">
+      <div class="barra-contenido">
+        <span class="texto-suave">{{
+          cambios() ? 'Tienes cambios sin guardar' : 'Todo guardado'
+        }}</span>
+        <button
+          matButton="filled"
+          type="button"
+          [disabled]="!cambios() || guardando()"
+          (click)="guardar()"
+        >
+          <lucide-icon [img]="iconos.Save" [size]="16" aria-hidden="true" />
+          {{ guardando() ? 'Guardando…' : 'Guardar asistencia' }}
+        </button>
+      </div>
+    </div>
+  }
+}

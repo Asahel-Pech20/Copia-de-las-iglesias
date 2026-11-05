@@ -1,0 +1,139 @@
+@if (consulta.isLoading() && !consulta.hasValue()) {
+  <app-page-header titulo="Evento" />
+  <section class="tarjeta"><app-esqueleto [filas]="4" [columnas]="2" /></section>
+} @else if (consulta.error()) {
+  <app-page-header titulo="Evento" />
+  <section class="tarjeta">
+    <app-estado-error [error]="consulta.error()" (reintentar)="consulta.reload()" />
+  </section>
+} @else if (consulta.value(); as evento) {
+  <app-page-header [titulo]="evento.titulo">
+    <a matButton="outlined" routerLink="/eventos">
+      <lucide-icon [img]="iconos.ArrowLeft" [size]="16" aria-hidden="true" /> Calendario
+    </a>
+    <!-- Un evento cancelado no se edita ni se le pasa lista -->
+    @if (evento.estado !== 'CANCELADO') {
+      @if (puedeAsistencia(evento)) {
+        <a matButton="filled" [routerLink]="['/eventos', evento.id, 'asistencia']">
+          <lucide-icon [img]="iconos.ClipboardCheck" [size]="16" aria-hidden="true" /> Pasar lista
+        </a>
+      }
+      @if (puedeEditar(evento)) {
+        <a matButton="outlined" [routerLink]="['/eventos', evento.id, 'editar']">
+          <lucide-icon [img]="iconos.Pencil" [size]="16" aria-hidden="true" /> Editar
+        </a>
+      }
+      @if (puedeCancelar(evento)) {
+        <button matButton="filled" type="button" class="boton-peligro" (click)="cancelar(evento)">
+          <lucide-icon [img]="iconos.Ban" [size]="16" aria-hidden="true" /> Cancelar evento
+        </button>
+      }
+    }
+  </app-page-header>
+
+  <p class="meta">
+    <app-badge-estado-evento [estado]="evento.estado" />
+    <span class="categoria">
+      <lucide-icon [img]="iconoCategoria[evento.categoria]" [size]="16" aria-hidden="true" />
+      {{ categorias[evento.categoria] }} · {{ tipos[evento.tipo] }}
+    </span>
+  </p>
+
+  @if (evento.estado === 'CANCELADO') {
+    <p class="alerta alerta-peligro" role="status">
+      <strong>Evento cancelado.</strong> Motivo: {{ evento.motivoCancelacion ?? 'sin motivo' }}
+    </p>
+  }
+
+  <div class="rejilla">
+    <section class="tarjeta tarjeta-cuerpo principal">
+      <h2 class="tarjeta-titulo">Datos del evento</h2>
+      <dl class="lista-datos">
+        <dt>Fecha</dt>
+        <dd class="primera-mayuscula">{{ fechaLarga(evento.fechaInicio) }}</dd>
+        <dt>Horario</dt>
+        <dd>
+          {{ fechaHora(evento.fechaInicio)
+          }}{{ evento.fechaFin ? ' – ' + fechaHora(evento.fechaFin) : '' }}
+        </dd>
+        <dt>Lugar</dt>
+        <dd class="lugar">
+          <lucide-icon [img]="iconos.MapPin" [size]="16" aria-hidden="true" /> {{ evento.lugar }}
+        </dd>
+        <dt>Ministerio</dt>
+        <dd>
+          @if (evento.ministerio) {
+            <a [routerLink]="['/ministerios', evento.ministerio.id]">{{
+              evento.ministerio.nombre
+            }}</a>
+          } @else {
+            General
+          }
+        </dd>
+        <dt>Descripción</dt>
+        <dd class="descripcion">{{ evento.descripcion ?? '—' }}</dd>
+        <dt>Creado por</dt>
+        <dd>{{ evento.creadoPor.nombre }}</dd>
+      </dl>
+    </section>
+
+    <div class="lateral">
+      <section class="tarjeta tarjeta-cuerpo">
+        <div class="cabecera-tarjeta">
+          <h2 class="tarjeta-titulo">Responsables</h2>
+          @if (evento.estado !== 'CANCELADO' && puedeEditar(evento)) {
+            <button matButton="outlined" type="button" (click)="editarResponsables(evento)">
+              <lucide-icon [img]="iconos.UsersRound" [size]="16" aria-hidden="true" /> Editar
+            </button>
+          }
+        </div>
+        @if (evento.responsables.length === 0) {
+          <p class="texto-suave">Sin responsables asignados.</p>
+        } @else {
+          <ul aria-label="Responsables" class="responsables">
+            @for (r of evento.responsables; track r.id) {
+              <li>
+                <a [routerLink]="['/miembros', r.id]" class="enlace-discreto"
+                  >{{ r.nombre }} {{ r.apellidos }}</a
+                >
+                @if (!r.activo) {
+                  <span class="texto-suave"> (inactivo)</span>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <section class="tarjeta tarjeta-cuerpo">
+        <h2 class="tarjeta-titulo">Asistencia</h2>
+        @if (evento.resumenAsistencia; as resumen) {
+          <dl class="cifras">
+            <div>
+              <dt>Presentes</dt>
+              <dd class="texto-exito">{{ resumen.presentes }}</dd>
+            </div>
+            <div>
+              <dt>Ausentes</dt>
+              <dd class="texto-peligro">{{ resumen.ausentes }}</dd>
+            </div>
+            <div>
+              <dt>Registrados</dt>
+              <dd>{{ resumen.total }}</dd>
+            </div>
+          </dl>
+          @if (puedeAsistencia(evento)) {
+            <a
+              routerLink="/asistencia"
+              [queryParams]="{ tab: 'historial', eventoId: evento.id }"
+              class="ver-historial"
+              >Ver historial</a
+            >
+          }
+        } @else {
+          <p class="texto-suave">Aún no se ha pasado lista.</p>
+        }
+      </section>
+    </div>
+  </div>
+}

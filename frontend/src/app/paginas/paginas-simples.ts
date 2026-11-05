@@ -1,8 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
 import { LucideAngularModule, SearchX, ShieldX } from 'lucide-angular';
-import { SesionService } from '@/app/core/sesion.service';
 
 const ESTILOS = `
   .centro {
@@ -61,29 +60,4 @@ export class NoEncontradoPage {
 })
 export class SinAccesoPage {
   protected readonly icono = ShieldX;
-}
-
-/** Inicio provisional: el dashboard (F4) se migra después. */
-@Component({
-  selector: 'app-inicio',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <h1 class="saludo">{{ saludo() }}, {{ nombre() }}</h1>
-    <p class="texto-suave">Bienvenido al sistema de administración de la iglesia.</p>
-  `,
-  styles: `
-    .saludo {
-      margin: 0 0 4px;
-      font-size: 20px;
-      font-weight: 600;
-    }
-  `,
-})
-export class InicioPage {
-  private readonly sesion = inject(SesionService);
-  protected readonly nombre = computed(() => this.sesion.usuario()?.nombre ?? '');
-  protected readonly saludo = computed(() => {
-    const hora = new Date().getHours();
-    return hora < 12 ? 'Buenos días' : hora < 19 ? 'Buenas tardes' : 'Buenas noches';
-  });
 }

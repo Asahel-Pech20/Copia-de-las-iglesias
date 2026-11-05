@@ -6,16 +6,26 @@ import { LoginPage } from './features/auth/login.page';
 import { MiCuentaPage } from './features/auth/mi-cuenta.page';
 import { RecuperarPage } from './features/auth/recuperar.page';
 import { RestablecerPage } from './features/auth/restablecer.page';
+import { AnunciosPage } from './features/anuncios/anuncios.page';
+import { CarteleraPage } from './features/anuncios/cartelera.page';
+import { AsistenciaPage } from './features/asistencia/asistencia.page';
+import { PaseListaPage } from './features/asistencia/pase-lista.page';
 import { ConfiguracionPage } from './features/configuracion/configuracion.page';
+import { EventoDetallePage } from './features/eventos/evento-detalle.page';
+import { EventoFormPage } from './features/eventos/evento-form.page';
+import { EventosPage } from './features/eventos/eventos.page';
+import { DashboardPage } from './features/dashboard/dashboard.page';
+import { DonacionesPage } from './features/donaciones/donaciones.page';
 import { MiembroFormPage } from './features/miembros/miembro-form.page';
 import { MiembroPerfilPage } from './features/miembros/miembro-perfil.page';
 import { MiembrosPage } from './features/miembros/miembros.page';
 import { MinisterioDetallePage } from './features/ministerios/ministerio-detalle.page';
 import { MinisteriosPage } from './features/ministerios/ministerios.page';
+import { ReportesPage } from './features/reportes/reportes.page';
 import { UsuariosPage } from './features/usuarios/usuarios.page';
 import { AppLayout } from './layout/app-layout';
 import { AuthLayout } from './layout/auth-layout';
-import { InicioPage, NoEncontradoPage, SinAccesoPage } from './paginas/paginas-simples';
+import { NoEncontradoPage, SinAccesoPage } from './paginas/paginas-simples';
 
 /**
  * Registro central de rutas (equivale a app/router.tsx de React).
@@ -37,6 +47,8 @@ function publica(
 }
 
 export const routes: Routes = [
+  // F3-13: cartelera pública, sin sesión ni layout administrativo
+  { path: 'cartelera', component: CarteleraPage, title: 'Cartelera' },
   publica('login', LoginPage, 'Iniciar sesión', true),
   publica('recuperar', RecuperarPage, 'Recuperar contraseña'),
   publica('restablecer', RestablecerPage, 'Nueva contraseña'),
@@ -46,7 +58,7 @@ export const routes: Routes = [
     canActivate: [rutaProtegida],
     canActivateChild: [rutaProtegida],
     children: [
-      { path: '', pathMatch: 'full', component: InicioPage, title: 'Inicio' },
+      { path: '', pathMatch: 'full', component: DashboardPage, title: 'Inicio' },
       {
         path: 'usuarios',
         component: UsuariosPage,
@@ -97,6 +109,65 @@ export const routes: Routes = [
         component: MinisterioDetallePage,
         data: { permiso: 'ministerios:leer' },
         title: 'Ministerio',
+      },
+      // F3: eventos, asistencia, anuncios
+      {
+        path: 'eventos',
+        component: EventosPage,
+        data: { permiso: 'eventos:leer' },
+        title: 'Eventos',
+      },
+      {
+        path: 'eventos/nuevo',
+        component: EventoFormPage,
+        canDeactivate: [cambiosSinGuardar],
+        data: { permiso: ['eventos:crear', 'eventos:crear-propio'] },
+        title: 'Nuevo evento',
+      },
+      {
+        path: 'eventos/:id',
+        component: EventoDetallePage,
+        data: { permiso: 'eventos:leer' },
+        title: 'Evento',
+      },
+      {
+        path: 'eventos/:id/editar',
+        component: EventoFormPage,
+        canDeactivate: [cambiosSinGuardar],
+        data: { permiso: ['eventos:editar', 'eventos:editar-propio'] },
+        title: 'Editar evento',
+      },
+      {
+        path: 'eventos/:id/asistencia',
+        component: PaseListaPage,
+        canDeactivate: [cambiosSinGuardar],
+        data: { permiso: ['asistencia:leer', 'asistencia:leer-propio'] },
+        title: 'Pase de lista',
+      },
+      {
+        path: 'asistencia',
+        component: AsistenciaPage,
+        data: { permiso: ['asistencia:leer', 'asistencia:leer-propio'] },
+        title: 'Asistencia',
+      },
+      {
+        path: 'anuncios',
+        component: AnunciosPage,
+        data: { permiso: 'anuncios:leer' },
+        title: 'Anuncios',
+      },
+      // F4: donaciones, reportes (el dashboard es la ruta raíz)
+      {
+        path: 'donaciones',
+        component: DonacionesPage,
+        data: { permiso: 'donaciones:leer' },
+        title: 'Donaciones',
+      },
+      {
+        path: 'reportes',
+        component: ReportesPage,
+        data: { permiso: ['reportes:generales', 'reportes:generales-propio', 'reportes:ingresos'] },
+        title: 'Reportes',
       },
       { path: 'mi-cuenta', component: MiCuentaPage, title: 'Mi cuenta' },
       { path: 'sin-acceso', component: SinAccesoPage, title: 'Sin acceso' },

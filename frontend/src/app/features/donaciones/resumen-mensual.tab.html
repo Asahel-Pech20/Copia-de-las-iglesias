@@ -1,0 +1,120 @@
+<div class="filtros" role="search">
+  <mat-form-field subscriptSizing="dynamic" class="mes">
+    <mat-label>Mes</mat-label>
+    <input
+      matInput
+      type="month"
+      [value]="valorMes()"
+      [max]="maxMes"
+      (change)="cambiarMes($event)"
+    />
+  </mat-form-field>
+  <button
+    *appPuede="'reportes:ingresos'"
+    matButton="outlined"
+    type="button"
+    class="descargar"
+    [disabled]="!r() || descargando()"
+    (click)="descargarPdf()"
+  >
+    <lucide-icon [img]="iconos.FileText" [size]="16" aria-hidden="true" />
+    {{ descargando() ? 'Descargando…' : 'Descargar PDF' }}
+  </button>
+</div>
+
+@if (consulta.isLoading() && !consulta.hasValue()) {
+  <section class="tarjeta"><app-esqueleto [filas]="5" [columnas]="2" /></section>
+} @else if (consulta.error() || !r()) {
+  <section class="tarjeta">
+    <app-estado-error [error]="consulta.error()" (reintentar)="consulta.reload()" />
+  </section>
+} @else {
+  @let d = r()!;
+  <div class="columna">
+    <section class="tarjeta tarjeta-cuerpo principal">
+      <div>
+        <p class="texto-suave">Total de {{ mesTexto(d.anio, d.mes) }}</p>
+        <p class="cifra">{{ moneda.formato(d.total) }}</p>
+        <p class="texto-suave pequeno">
+          {{ d.cantidad }} {{ d.cantidad === 1 ? 'aportación' : 'aportaciones' }}
+        </p>
+      </div>
+      <div>
+        <p class="texto-suave">Contra {{ mesTexto(d.mesAnterior.anio, d.mesAnterior.mes) }}</p>
+        @if (d.variacionPorcentual === null) {
+          <p class="sin-datos texto-suave">Sin datos del mes anterior</p>
+        } @else {
+          <p
+            class="cifra variacion"
+            [class.texto-exito]="d.variacionPorcentual > 0"
+            [class.texto-peligro]="d.variacionPorcentual < 0"
+            [class.texto-suave]="d.variacionPorcentual === 0"
+          >
+            <lucide-icon
+              [img]="
+                d.variacionPorcentual > 0
+                  ? iconos.TrendingUp
+                  : d.variacionPorcentual < 0
+                    ? iconos.TrendingDown
+                    : iconos.Minus
+              "
+              [size]="24"
+              aria-hidden="true"
+            />
+            <span>{{ textoVariacion(d.variacionPorcentual) }}</span>
+            <span class="sr-only"
+              >{{
+                d.variacionPorcentual > 0 ? 'más' : d.variacionPorcentual < 0 ? 'menos' : 'igual'
+              }}
+              que el mes anterior</span
+            >
+          </p>
+        }
+        <p class="texto-suave pequeno">Mes anterior: {{ moneda.formato(d.mesAnterior.total) }}</p>
+      </div>
+    </section>
+
+    <div class="dos">
+      <section class="tarjeta tarjeta-cuerpo">
+        <p class="texto-suave">Aportaciones identificadas</p>
+        <p class="cifra-media">{{ moneda.formato(d.identificadas.total) }}</p>
+        <p class="texto-suave pequeno">{{ d.identificadas.cantidad }} registros</p>
+      </section>
+      <section class="tarjeta tarjeta-cuerpo">
+        <p class="texto-suave">Aportaciones anónimas</p>
+        <p class="cifra-media">{{ moneda.formato(d.anonimas.total) }}</p>
+        <p class="texto-suave pequeno">{{ d.anonimas.cantidad }} registros</p>
+      </section>
+    </div>
+
+    <div class="dos">
+      <section class="tarjeta tarjeta-cuerpo">
+        <h3 class="tarjeta-titulo">Por concepto</h3>
+        <ng-container
+          *ngTemplateOutlet="desglose; context: { $implicit: conDatos(d.porConcepto) }"
+        />
+      </section>
+      <section class="tarjeta tarjeta-cuerpo">
+        <h3 class="tarjeta-titulo">Por método de recepción</h3>
+        <ng-container *ngTemplateOutlet="desglose; context: { $implicit: conDatos(d.porMetodo) }" />
+      </section>
+    </div>
+  </div>
+}
+
+<ng-template #desglose let-grupos>
+  @if (grupos.length === 0) {
+    <p class="texto-suave">Sin aportaciones este mes.</p>
+  } @else {
+    <dl class="desglose">
+      @for (g of grupos; track g.clave) {
+        <div>
+          <dt>
+            {{ etiqueta(g.clave) }} <span class="texto-suave pequeno">({{ g.cantidad }})</span>
+          </dt>
+          <dd>{{ moneda.formato(g.total) }}</dd>
+        </div>
+      }
+    </dl>
+  }
+</ng-template>

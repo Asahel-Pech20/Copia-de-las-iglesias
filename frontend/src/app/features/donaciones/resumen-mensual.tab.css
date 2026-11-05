@@ -1,0 +1,80 @@
+.mes {
+  width: 12rem;
+}
+.descargar {
+  margin-left: auto;
+}
+@media (max-width: 639px) {
+  .mes {
+    width: 100%;
+  }
+  .descargar {
+    margin-left: 0;
+  }
+}
+p {
+  margin: 0;
+}
+.principal {
+  display: grid;
+  gap: 16px;
+}
+@media (min-width: 640px) {
+  .principal {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.cifra {
+  margin-top: 4px;
+  font-size: 30px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.cifra-media {
+  margin-top: 4px;
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.variacion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sin-datos {
+  margin-top: 4px;
+  font-size: 16px;
+}
+.pequeno {
+  margin-top: 4px;
+  font-size: 12px;
+}
+.dos {
+  display: grid;
+  gap: 16px;
+}
+@media (min-width: 640px) {
+  .dos {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.desglose {
+  margin: 0;
+}
+.desglose div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+}
+.desglose div + div {
+  border-top: 1px solid var(--borde);
+}
+.desglose dt {
+  margin: 0;
+}
+.desglose dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}

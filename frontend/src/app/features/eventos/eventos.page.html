@@ -1,0 +1,88 @@
+<app-page-header titulo="Eventos" descripcion="Calendario de cultos, reuniones y actividades.">
+  @if (puedeCrear()) {
+    <a matButton="filled" routerLink="/eventos/nuevo">
+      <lucide-icon [img]="iconos.Plus" [size]="16" aria-hidden="true" /> Nuevo evento
+    </a>
+  }
+</app-page-header>
+
+<div class="filtros" role="search">
+  <mat-form-field subscriptSizing="dynamic" class="select-filtro">
+    <mat-label>Tipo</mat-label>
+    <mat-select [value]="filtros.valores().tipo" (valueChange)="filtros.cambiar({ tipo: $event })">
+      <mat-option value="">Todos los tipos</mat-option>
+      @for (o of opcionesTipo; track o.valor) {
+        <mat-option [value]="o.valor">{{ o.etiqueta }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field subscriptSizing="dynamic" class="select-filtro">
+    <mat-label>Categoría</mat-label>
+    <mat-select
+      [value]="filtros.valores().categoria"
+      (valueChange)="filtros.cambiar({ categoria: $event })"
+    >
+      <mat-option value="">Todas las categorías</mat-option>
+      @for (o of opcionesCategoria; track o.valor) {
+        <mat-option [value]="o.valor">{{ o.etiqueta }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field subscriptSizing="dynamic" class="select-filtro">
+    <mat-label>Ministerio</mat-label>
+    <mat-select
+      [value]="filtros.valores().ministerioId"
+      (valueChange)="filtros.cambiar({ ministerioId: $event })"
+    >
+      <mat-option value="">Todos los ministerios</mat-option>
+      @for (m of opcionesMinisterio(); track m.id) {
+        <mat-option [value]="m.id">{{ m.nombre }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+  <mat-slide-toggle
+    [checked]="filtros.valores().cancelados"
+    (change)="filtros.cambiar({ cancelados: $event.checked })"
+  >
+    Mostrar cancelados
+  </mat-slide-toggle>
+</div>
+
+<section class="tarjeta calendario">
+  <app-leyenda-categorias />
+  <div class="barra">
+    <div class="navegacion">
+      <button matIconButton type="button" aria-label="Periodo anterior" (click)="mover(-1)">
+        <lucide-icon [img]="iconos.ChevronLeft" [size]="18" aria-hidden="true" />
+      </button>
+      <button matIconButton type="button" aria-label="Periodo siguiente" (click)="mover(1)">
+        <lucide-icon [img]="iconos.ChevronRight" [size]="18" aria-hidden="true" />
+      </button>
+      <button matButton="outlined" type="button" [disabled]="esHoy()" (click)="hoy()">Hoy</button>
+    </div>
+    <h2 class="titulo-periodo" aria-live="polite">{{ titulo() }}</h2>
+    <mat-button-toggle-group
+      aria-label="Vista del calendario"
+      [value]="vista()"
+      (change)="cambiarVista($event.value)"
+      hideSingleSelectionIndicator
+    >
+      <mat-button-toggle value="mes">Mes</mat-button-toggle>
+      <mat-button-toggle value="semana">Semana</mat-button-toggle>
+      <mat-button-toggle value="lista">Lista</mat-button-toggle>
+    </mat-button-toggle-group>
+  </div>
+
+  @if (consulta.error()) {
+    <app-estado-error [error]="consulta.error()" (reintentar)="consulta.reload()" />
+  }
+  <div [attr.aria-busy]="consulta.isLoading()" [class.cargando]="consulta.isLoading()">
+    <app-calendario-eventos
+      [eventos]="eventos()"
+      [vista]="vista()"
+      [referencia]="referencia()"
+      [puedeCrear]="puedeCrear()"
+      (verDia)="verDia($event)"
+    />
+  </div>
+</section>

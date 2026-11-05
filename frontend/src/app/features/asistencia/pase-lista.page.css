@@ -1,0 +1,125 @@
+.contenido {
+  padding-bottom: 96px;
+}
+.conteo {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.herramientas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+@media (min-width: 640px) {
+  .herramientas {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+}
+.masivas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.alerta {
+  margin: 0 0 12px;
+}
+.lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fila-miembro {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+}
+.fila-miembro + .fila-miembro {
+  border-top: 1px solid var(--borde);
+}
+.nombre {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.botones {
+  display: flex;
+  flex-shrink: 0;
+  gap: 4px;
+}
+.marca {
+  display: inline-flex;
+  min-width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 8px;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  cursor: pointer;
+}
+.marca:focus-visible {
+  outline: 2px solid var(--anillo);
+  outline-offset: 2px;
+}
+.marca:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.marca.presente.activa {
+  border-color: var(--exito);
+  background: var(--exito);
+  color: var(--superficie);
+}
+.marca.ausente.activa {
+  border-color: var(--peligro);
+  background: var(--peligro);
+  color: var(--peligro-texto);
+}
+.texto {
+  display: none;
+}
+@media (min-width: 640px) {
+  .marca {
+    padding: 0 12px;
+  }
+  .texto {
+    display: inline;
+  }
+}
+.barra-guardar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  padding: 12px;
+  border-top: 1px solid var(--borde);
+  background: var(--superficie);
+}
+@media (min-width: 768px) {
+  .barra-guardar {
+    left: 240px;
+  }
+}
+.barra-contenido {
+  display: flex;
+  max-width: 64rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 auto;
+  font-size: 14px;
+}

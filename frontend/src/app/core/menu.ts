@@ -19,7 +19,7 @@ export interface EntradaMenu {
   icono: LucideIconData;
   /** Si se omite, la ve cualquier usuario autenticado */
   permiso?: Permiso | Permiso[];
-  /** Módulo todavía no migrado a Angular (F3/F4): se muestra deshabilitado */
+  /** Módulo todavía no migrado: se muestra deshabilitado (ya no queda ninguno) */
   pendiente?: boolean;
 }
 
@@ -36,35 +36,30 @@ export const MENU: EntradaMenu[] = [
     ruta: '/eventos',
     icono: CalendarDays,
     permiso: 'eventos:leer',
-    pendiente: true,
   },
   {
     etiqueta: 'Asistencia',
     ruta: '/asistencia',
     icono: ClipboardCheck,
     permiso: ['asistencia:leer', 'asistencia:leer-propio'],
-    pendiente: true,
   },
   {
     etiqueta: 'Anuncios',
     ruta: '/anuncios',
     icono: Megaphone,
     permiso: 'anuncios:leer',
-    pendiente: true,
   },
   {
     etiqueta: 'Donaciones',
     ruta: '/donaciones',
     icono: Banknote,
     permiso: 'donaciones:leer',
-    pendiente: true,
   },
   {
     etiqueta: 'Reportes',
     ruta: '/reportes',
     icono: FileBarChart,
     permiso: ['reportes:generales', 'reportes:generales-propio', 'reportes:ingresos'],
-    pendiente: true,
   },
   { etiqueta: 'Usuarios', ruta: '/usuarios', icono: UserCog, permiso: 'usuarios:leer' },
   {

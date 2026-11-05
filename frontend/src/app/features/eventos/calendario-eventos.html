@@ -1,0 +1,79 @@
+<ng-template #chip let-e>
+  <a
+    [routerLink]="['/eventos', e.id]"
+    [class]="'chip ' + claseEvento(e)"
+    [attr.aria-label]="descripcion(e)"
+  >
+    <lucide-icon [img]="icono(e)" [size]="12" aria-hidden="true" />
+    <span class="texto" [class.tachado]="e.estado === 'CANCELADO'"
+      >{{ hora(e) }} {{ e.titulo }}</span
+    >
+  </a>
+</ng-template>
+
+@switch (vista()) {
+  @case ('mes') {
+    <div class="tabla-mes" role="table" aria-label="Calendario mensual">
+      <div class="fila encabezado" role="row">
+        @for (n of nombresDias; track n.largo) {
+          <div role="columnheader" [attr.aria-label]="n.largo">{{ n.corto }}</div>
+        }
+      </div>
+      @for (semana of semanas(); track $index) {
+        <div class="fila" role="row">
+          @for (d of semana; track d.clave) {
+            <div class="celda" role="cell" [class.fuera]="!d.delMes" [class.hoy]="d.hoy">
+              @if (puedeCrear()) {
+                <a
+                  class="numero"
+                  [routerLink]="['/eventos/nuevo']"
+                  [queryParams]="{ fecha: d.clave }"
+                  [attr.aria-label]="'Nuevo evento el ' + tituloDia(d)"
+                  >{{ d.numero }}</a
+                >
+              } @else {
+                <span class="numero">{{ d.numero }}</span>
+              }
+              @for (e of d.eventos.slice(0, maxPorDia); track e.id) {
+                <ng-container *ngTemplateOutlet="chip; context: { $implicit: e }" />
+              }
+              @if (d.eventos.length > maxPorDia) {
+                <button type="button" class="mas" (click)="verDia.emit(d.fecha)">
+                  +{{ d.eventos.length - maxPorDia }} más
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+  @case ('semana') {
+    <div class="semana">
+      @for (d of dias(); track d.clave) {
+        <section class="dia-semana" [class.hoy]="d.hoy" [attr.aria-label]="tituloDia(d)">
+          <h3 class="titulo-dia">{{ tituloDia(d) }}</h3>
+          @for (e of d.eventos; track e.id) {
+            <ng-container *ngTemplateOutlet="chip; context: { $implicit: e }" />
+          } @empty {
+            <p class="texto-suave sin-eventos">Sin eventos</p>
+          }
+        </section>
+      }
+    </div>
+  }
+  @default {
+    @for (d of dias(); track d.clave) {
+      <section class="grupo-lista" [attr.aria-label]="tituloDia(d)">
+        <h3 class="titulo-dia" [class.hoy]="d.hoy">{{ tituloDia(d) }}</h3>
+        <app-lista-eventos
+          [eventos]="d.eventos"
+          [conEstado]="true"
+          [etiqueta]="'Eventos del ' + tituloDia(d)"
+        />
+      </section>
+    } @empty {
+      <p class="texto-suave vacio" role="status">No hay eventos en este periodo.</p>
+    }
+  }
+}

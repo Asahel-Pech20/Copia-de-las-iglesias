@@ -1,0 +1,31 @@
+.calendario {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px;
+}
+@media (min-width: 640px) {
+  .calendario {
+    padding: 16px;
+  }
+}
+.barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.navegacion {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.titulo-periodo {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+.cargando {
+  opacity: 0.6;
+}

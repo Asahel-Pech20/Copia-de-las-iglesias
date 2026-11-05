@@ -1,0 +1,101 @@
+<app-page-header [titulo]="titulo()" [descripcion]="evento()?.titulo">
+  <a matButton="outlined" [routerLink]="volver()">
+    <lucide-icon [img]="iconoVolver" [size]="16" aria-hidden="true" /> Volver
+  </a>
+</app-page-header>
+
+<section class="tarjeta">
+  @if (id() && consulta.isLoading()) {
+    <app-esqueleto [filas]="4" [columnas]="2" />
+  } @else if (id() && consulta.error()) {
+    <app-estado-error [error]="consulta.error()" (reintentar)="consulta.reload()" />
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="enviar()" novalidate class="rejilla">
+      @if (errorGeneral()) {
+        <p class="alerta alerta-peligro doble" role="alert">{{ errorGeneral() }}</p>
+      }
+      <mat-form-field class="doble">
+        <mat-label>Título</mat-label>
+        <input matInput autocomplete="off" formControlName="titulo" required />
+        <mat-error>{{ error('titulo') }}</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Tipo</mat-label>
+        <mat-select formControlName="tipo" required>
+          @for (o of opcionesTipo; track o.valor) {
+            <mat-option [value]="o.valor">{{ o.etiqueta }}</mat-option>
+          }
+        </mat-select>
+        <mat-error>{{ error('tipo') }}</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Categoría</mat-label>
+        <mat-select formControlName="categoria" required>
+          @for (o of opcionesCategoria; track o.valor) {
+            <mat-option [value]="o.valor">{{ o.etiqueta }}</mat-option>
+          }
+        </mat-select>
+        <mat-error>{{ error('categoria') }}</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Fecha</mat-label>
+        <input matInput type="date" formControlName="fecha" required />
+        <mat-error>{{ error('fecha') }}</mat-error>
+      </mat-form-field>
+      <div class="horas">
+        <mat-form-field>
+          <mat-label>Hora de inicio</mat-label>
+          <input matInput type="time" formControlName="horaInicio" required />
+          <mat-error>{{ error('horaInicio') }}</mat-error>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Hora de fin</mat-label>
+          <input matInput type="time" formControlName="horaFin" />
+          <mat-error>{{ error('horaFin') }}</mat-error>
+        </mat-form-field>
+      </div>
+      <mat-form-field>
+        <mat-label>Lugar</mat-label>
+        <input
+          matInput
+          autocomplete="off"
+          list="lugares-habituales"
+          formControlName="lugar"
+          required
+        />
+        @if (lugares().length > 0) {
+          <mat-hint>Puedes elegir uno de los lugares habituales.</mat-hint>
+        }
+        <mat-error>{{ error('lugar') }}</mat-error>
+      </mat-form-field>
+      <datalist id="lugares-habituales">
+        @for (l of lugares(); track l) {
+          <option [value]="l"></option>
+        }
+      </datalist>
+      <mat-form-field>
+        <mat-label>Ministerio</mat-label>
+        <mat-select formControlName="ministerioId" [required]="!completo()">
+          @if (completo()) {
+            <mat-option value="">Sin ministerio (general)</mat-option>
+          }
+          @for (o of opcionesMinisterio(); track o.valor) {
+            <mat-option [value]="o.valor">{{ o.etiqueta }}</mat-option>
+          }
+        </mat-select>
+        <mat-error>{{ error('ministerioId') }}</mat-error>
+      </mat-form-field>
+      <mat-form-field class="doble">
+        <mat-label>Descripción</mat-label>
+        <textarea matInput rows="4" formControlName="descripcion"></textarea>
+        <mat-error>{{ error('descripcion') }}</mat-error>
+      </mat-form-field>
+      <div class="botones doble">
+        <a matButton="outlined" [routerLink]="volver()">Cancelar</a>
+        <button matButton="filled" type="submit" [disabled]="enviando()">
+          {{ enviando() ? 'Guardando…' : 'Guardar' }}
+        </button>
+      </div>
+    </form>
+  }
+</section>

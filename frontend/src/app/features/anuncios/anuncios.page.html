@@ -1,0 +1,73 @@
+<app-page-header titulo="Anuncios" descripcion="Comunicados para la congregación.">
+  @if (puedeCrear()) {
+    <button matButton="filled" type="button" (click)="abrirFormulario()">
+      <lucide-icon [img]="iconos.Plus" [size]="16" aria-hidden="true" /> Nuevo anuncio
+    </button>
+  }
+</app-page-header>
+
+<mat-tab-group
+  animationDuration="0ms"
+  [selectedIndex]="indice()"
+  (selectedIndexChange)="cambiarPestana($event)"
+>
+  @for (p of pestanas; track p) {
+    <mat-tab
+      [label]="p === 'vigentes' ? 'Vigentes' : p === 'programados' ? 'Programados' : 'Expirados'"
+    >
+      @if (p === pestana()) {
+        <div class="pestana">
+          @if (consulta().isLoading() && !consulta().hasValue()) {
+            <section class="tarjeta"><app-esqueleto [filas]="3" [columnas]="1" /></section>
+          } @else if (consulta().error()) {
+            <section class="tarjeta">
+              <app-estado-error [error]="consulta().error()" (reintentar)="consulta().reload()" />
+            </section>
+          } @else if (lista().length === 0) {
+            <section class="tarjeta">
+              <app-estado-vacio [icono]="iconos.Megaphone" [titulo]="vacios[p]">
+                @if (puedeCrear()) {
+                  <button matButton="filled" type="button" (click)="abrirFormulario()">
+                    Publicar anuncio
+                  </button>
+                }
+              </app-estado-vacio>
+            </section>
+          } @else {
+            <ul [attr.aria-label]="'Anuncios ' + p" class="lista">
+              @for (a of lista(); track a.id) {
+                <li>
+                  <app-tarjeta-anuncio [anuncio]="a">
+                    <button
+                      *appPuede="'anuncios:editar'"
+                      matButton="outlined"
+                      type="button"
+                      [attr.aria-label]="'Editar ' + a.titulo"
+                      (click)="abrirFormulario(a)"
+                    >
+                      <lucide-icon [img]="iconos.Pencil" [size]="16" aria-hidden="true" /> Editar
+                    </button>
+                    <button
+                      *appPuede="'anuncios:eliminar'"
+                      matButton="outlined"
+                      type="button"
+                      [attr.aria-label]="'Eliminar ' + a.titulo"
+                      (click)="eliminar(a)"
+                    >
+                      <lucide-icon [img]="iconos.Trash2" [size]="16" aria-hidden="true" /> Eliminar
+                    </button>
+                  </app-tarjeta-anuncio>
+                </li>
+              }
+            </ul>
+            @if (p === 'vigentes' && vigentes.value(); as datos) {
+              <section class="tarjeta paginacion">
+                <app-paginacion [meta]="datos.meta" (cambio)="filtros.cambiar({ page: $event })" />
+              </section>
+            }
+          }
+        </div>
+      }
+    </mat-tab>
+  }
+</mat-tab-group>
