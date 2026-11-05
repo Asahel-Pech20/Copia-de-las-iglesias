@@ -5,8 +5,8 @@
   "scripts": {
     "ng": "ng",
     "dev": "ng serve --port 5173",
-    "build": "ng build",
-    "test": "ng test --watch=false",
+    "build": "node scripts/ng-terminar.mjs build",
+    "test": "node scripts/ng-terminar.mjs test --watch=false",
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.spec.json --noEmit"
   },
   "dependencies": {
