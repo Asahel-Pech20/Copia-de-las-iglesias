@@ -11,3 +11,7 @@ allowBuilds:
   msgpackr-extract: true
   prisma: true
   workerd: false
+overrides:
+  # Las pruebas del backend (vitest 5) usan vite 8, igual que el proyecto original. Sin esto toman
+  # el vite 7 que trae Angular y `rutasProtegidas.test.ts` deja de ver los nombres de los middlewares.
+  'vitest@5>vite': ^8.3.5
