@@ -106,6 +106,18 @@ describe('refresh, logout y /auth/me (B1-10)', () => {
     expect(res.body.data.permisos).toContain('miembros:crear');
   });
 
+  it('/auth/me trae la iglesia del personal y la Coordinación no tiene (null)', async () => {
+    const tesorero = await loginComo('TESORERO');
+    const propio = await request(app).get('/api/v1/auth/me').set('Authorization', tesorero.auth);
+    expect(propio.body.data.usuario.iglesiaId).toBe(tesorero.usuario.iglesiaId);
+    expect(propio.body.data.usuario.iglesiaId).toEqual(expect.any(String));
+    const coordinacion = await loginComo('COORDINACION');
+    const nacional = await request(app)
+      .get('/api/v1/auth/me')
+      .set('Authorization', coordinacion.auth);
+    expect(nacional.body.data.usuario.iglesiaId).toBeNull();
+  });
+
   it('refresh rota el token: el anterior deja de servir', async () => {
     await crearUsuario('ADMIN_IGLESIA', { email: 'r@prueba.local' });
     const original = cookieDe(await entrar('r@prueba.local'));

@@ -60,6 +60,9 @@ export const PERMISOS = [
   'diezmo:leer',
   'espacios:leer',
   'espacios:gestionar',
+  // Misas celebradas y padres (versión mínima que necesita el diezmo)
+  'misas:leer',
+  'misas:registrar',
 ] as const;
 
 export type Permiso = (typeof PERMISOS)[number];
@@ -95,6 +98,8 @@ export const PERMISOS_POR_ROL: Record<RolUsuario, readonly Permiso[]> = {
     'diezmo:leer',
     'espacios:leer',
     'espacios:gestionar',
+    'misas:leer',
+    'misas:registrar',
   ],
   PASTOR: [
     'usuarios:opciones',
@@ -134,6 +139,7 @@ export const PERMISOS_POR_ROL: Record<RolUsuario, readonly Permiso[]> = {
     'reportes:ingresos',
     'diezmo:capturar',
     'diezmo:leer',
+    'misas:leer',
   ],
   COORDINADOR: [
     'configuracion:leer',

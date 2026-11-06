@@ -21,6 +21,8 @@ tags:
   - name: Donaciones
   - name: Dashboard
   - name: Reportes
+  - name: Misas
+  - name: Diezmo
 
 components:
   securitySchemes:
@@ -38,6 +40,27 @@ components:
       in: path
       required: true
       schema: { type: string, format: uuid }
+    IglesiaId:
+      name: iglesiaId
+      in: path
+      required: true
+      description: Iglesia del personal. Si no es la del usuario es 403; si no existe, 404 (alcanceIglesia).
+      schema: { type: string, format: uuid }
+    MisaId:
+      name: misaId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    DesdeDia:
+      name: desde
+      in: query
+      description: aaaa-mm-dd, hora local de la iglesia
+      schema: { type: string, format: date }
+    HastaDia:
+      name: hasta
+      in: query
+      description: aaaa-mm-dd, incluye el día completo
+      schema: { type: string, format: date }
     Page: { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
     Limit:
       { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
@@ -96,6 +119,13 @@ components:
         email: { type: string, format: email }
         rol: { $ref: '#/components/schemas/Rol' }
         activo: { type: boolean }
+        iglesiaId:
+          {
+            type: string,
+            format: uuid,
+            nullable: true,
+            description: Null solo para la Coordinación,
+          }
         ultimoAcceso: { type: string, format: date-time, nullable: true }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
@@ -1717,3 +1747,162 @@ paths:
         '400': { $ref: '#/components/responses/Validacion' }
         '403': { $ref: '#/components/responses/Prohibido' }
         '422': { $ref: '#/components/responses/ReglaNegocio' }
+
+  # ───────────── Ecclesia · Misas (versión mínima) y diezmo ─────────────
+  /iglesias/{iglesiaId}/padres:
+    parameters: [{ $ref: '#/components/parameters/IglesiaId' }]
+    get:
+      tags: [Misas]
+      summary: Padres registrados (misas:leer)
+      responses:
+        '200': { description: OK }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+    post:
+      tags: [Misas]
+      summary: Registrar un padre (misas:registrar)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre]
+              properties: { nombre: { type: string, maxLength: 120 } }
+      responses:
+        '201': { description: Creado }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+
+  /iglesias/{iglesiaId}/misas-celebradas:
+    parameters: [{ $ref: '#/components/parameters/IglesiaId' }]
+    get:
+      tags: [Misas]
+      summary: Misas celebradas del periodo con su diezmo (misas:leer); por omisión, el mes en curso
+      parameters:
+        - { $ref: '#/components/parameters/DesdeDia' }
+        - { $ref: '#/components/parameters/HastaDia' }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Limit' }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+    post:
+      tags: [Misas]
+      summary: Registrar una misa ya celebrada (misas:registrar)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [inicio, padreId]
+              properties:
+                inicio:
+                  { type: string, format: date-time, description: Instante de inicio (ISO 8601) }
+                padreId: { type: string, format: uuid }
+      responses:
+        '201': { description: Creado }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+
+  /iglesias/{iglesiaId}/misas-celebradas/{misaId}/diezmo:
+    parameters:
+      - { $ref: '#/components/parameters/IglesiaId' }
+      - { $ref: '#/components/parameters/MisaId' }
+    post:
+      tags: [Diezmo]
+      summary: Capturar el diezmo de una misa celebrada, una sola vez (diezmo:capturar, TESORERO)
+      description: >
+        El monto viaja como texto con hasta 2 decimales. 409 si la misa ya tiene captura (se corrige con PATCH);
+        422 si la misa todavía no se celebra.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [monto]
+              properties: { monto: { type: string, example: '1250.50' } }
+      responses:
+        '201': { description: Creado }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+    get:
+      tags: [Diezmo]
+      summary: Captura vigente con su historial de correcciones (diezmo:leer, ADMIN_IGLESIA y TESORERO)
+      responses:
+        '200': { description: OK }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+    patch:
+      tags: [Diezmo]
+      summary: Corregir el monto; guarda quién, cuándo y la cantidad anterior (diezmo:capturar)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [monto]
+              properties: { monto: { type: string, example: '1520.50' } }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+        '404': { $ref: '#/components/responses/NoEncontrado' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+        '422': { $ref: '#/components/responses/ReglaNegocio' }
+
+  /iglesias/{iglesiaId}/diezmos:
+    parameters: [{ $ref: '#/components/parameters/IglesiaId' }]
+    get:
+      tags: [Diezmo]
+      summary: Capturas del periodo, la más reciente primero (diezmo:leer)
+      parameters:
+        - { $ref: '#/components/parameters/DesdeDia' }
+        - { $ref: '#/components/parameters/HastaDia' }
+        - { $ref: '#/components/parameters/Page' }
+        - { $ref: '#/components/parameters/Limit' }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+
+  /iglesias/{iglesiaId}/diezmo/resumen:
+    parameters: [{ $ref: '#/components/parameters/IglesiaId' }]
+    get:
+      tags: [Diezmo]
+      summary: Total, promedio por misa y misas con más y con menos diezmo (diezmo:leer)
+      description: Sumas en SQL sobre Decimal(12,2). Reporte solo para el personal de esa iglesia.
+      parameters:
+        - { $ref: '#/components/parameters/DesdeDia' }
+        - { $ref: '#/components/parameters/HastaDia' }
+      responses:
+        '200': { description: 'OK: desde, hasta, misas, total, promedio, conMas y conMenos' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }
+
+  /iglesias/{iglesiaId}/diezmo/agrupado:
+    parameters: [{ $ref: '#/components/parameters/IglesiaId' }]
+    get:
+      tags: [Diezmo]
+      summary: Diezmo por día, semana, mes, horario de misa o padre, en la hora local de la iglesia (diezmo:leer)
+      parameters:
+        - { $ref: '#/components/parameters/DesdeDia' }
+        - { $ref: '#/components/parameters/HastaDia' }
+        - name: por
+          in: query
+          required: true
+          schema: { type: string, enum: [dia, semana, mes, horario, padre] }
+      responses:
+        '200': { description: 'OK: desde, hasta, por y grupos con clave, etiqueta, misas y total' }
+        '400': { $ref: '#/components/responses/Validacion' }
+        '403': { $ref: '#/components/responses/Prohibido' }

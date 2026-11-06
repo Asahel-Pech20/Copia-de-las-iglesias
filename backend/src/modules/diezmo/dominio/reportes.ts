@@ -4,6 +4,7 @@
 
 import { aCentavos, deCentavos } from './dinero';
 import { SUPUESTOS_DIEZMO, type SupuestosDiezmo } from './supuestos';
+import { type PartesLocales, partesLocales } from '../../../lib/dominio/zona';
 
 /** Una captura de diezmo con lo que los reportes necesitan de su misa. */
 export interface CapturaReporte {
@@ -74,36 +75,6 @@ export interface GrupoDiezmo {
   clave: string;
   misas: number;
   total: string;
-}
-
-interface PartesLocales {
-  anio: number;
-  mes: number;
-  dia: number;
-  hora: string;
-  minuto: string;
-}
-
-/** Fecha y hora del instante en la zona horaria de la iglesia (RN-31: la hora de la misa es la local). */
-function partesLocales(instante: Date, zonaHoraria: string): PartesLocales {
-  const formato = new Intl.DateTimeFormat('en-CA', {
-    timeZone: zonaHoraria,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-  });
-  const p: Record<string, string> = {};
-  for (const parte of formato.formatToParts(instante)) p[parte.type] = parte.value;
-  return {
-    anio: Number(p['year']),
-    mes: Number(p['month']),
-    dia: Number(p['day']),
-    hora: p['hour'] ?? '00',
-    minuto: p['minute'] ?? '00',
-  };
 }
 
 const dosDigitos = (n: number) => String(n).padStart(2, '0');

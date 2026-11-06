@@ -157,5 +157,7 @@ describe('matriz de permisos (specs.md §3)', () => {
     expect(quien('diezmo:leer')).toEqual(['ADMIN_IGLESIA', 'TESORERO']);
     expect(quien('espacios:leer')).toEqual(['ADMIN_IGLESIA']);
     expect(quien('espacios:gestionar')).toEqual(['ADMIN_IGLESIA']);
+    expect(quien('misas:leer')).toEqual(['ADMIN_IGLESIA', 'TESORERO']);
+    expect(quien('misas:registrar')).toEqual(['ADMIN_IGLESIA']);
   });
 });
