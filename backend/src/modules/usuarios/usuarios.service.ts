@@ -31,8 +31,8 @@ async function obtenerOFallar(id: string) {
 
 /** Lanza 422 si el cambio dejaría el sistema sin administradores activos. */
 async function protegerUltimoAdmin(usuario: { rol: RolUsuario; activo: boolean }) {
-  if (usuario.rol !== 'ADMIN' || !usuario.activo) return;
-  const activos = await prisma.usuario.count({ where: { rol: 'ADMIN', activo: true } });
+  if (usuario.rol !== 'ADMIN_IGLESIA' || !usuario.activo) return;
+  const activos = await prisma.usuario.count({ where: { rol: 'ADMIN_IGLESIA', activo: true } });
   if (activos <= 1) throw AppError.reglaNegocio(ULTIMO_ADMIN);
 }
 
@@ -106,7 +106,7 @@ export async function crear(datos: CrearUsuario) {
 export async function editar(id: string, datos: EditarUsuario) {
   const actual = await obtenerOFallar(id);
   if (datos.email) await verificarEmailLibre(datos.email, id);
-  if (datos.rol && datos.rol !== 'ADMIN') await protegerUltimoAdmin(actual);
+  if (datos.rol && datos.rol !== 'ADMIN_IGLESIA') await protegerUltimoAdmin(actual);
   return prisma.usuario.update({ where: { id }, data: datos, select: SELECT_USUARIO });
 }
 

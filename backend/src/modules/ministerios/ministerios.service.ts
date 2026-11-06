@@ -76,7 +76,7 @@ async function verificarNombreLibre(nombre: string, exceptoId?: string) {
     throw AppError.conflicto(NOMBRE_DUPLICADO, [{ campo: 'nombre', mensaje: NOMBRE_DUPLICADO }]);
 }
 
-/** ADMIN/PASTOR siempre; COORDINADOR solo en los ministerios que coordina → si no, 403. */
+/** ADMIN_IGLESIA/PASTOR siempre; COORDINADOR solo en los ministerios que coordina → si no, 403. */
 async function verificarPuedeGestionarIntegrantes(solicitante: Solicitante, ministerioId: string) {
   if (tienePermiso(solicitante.rol, 'ministerios:editar')) return;
   if (
@@ -192,7 +192,7 @@ export async function asignarCoordinadores(id: string, usuarioIds: string[]) {
 // ───────── Integrantes (B2-09, B2-10) ─────────
 
 /**
- * Vincula miembros activos (reactiva vínculos previos). ADMIN, PASTOR y el COORDINADOR del ministerio.
+ * Vincula miembros activos (reactiva vínculos previos). ADMIN_IGLESIA, PASTOR y el COORDINADOR del ministerio.
  * Todo en una transacción: si algún miembro no es válido no se vincula ninguno.
  */
 export async function vincularMiembros(id: string, miembroIds: string[], solicitante: Solicitante) {

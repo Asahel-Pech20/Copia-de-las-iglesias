@@ -14,11 +14,23 @@ datasource db {
 // ───────────── Enums ─────────────
 
 enum Rol {
-  ADMIN
+  // Nacional (Ecclesia): sin iglesia asignada
+  COORDINACION
+  // Antes ADMIN; administrador de una iglesia
+  ADMIN_IGLESIA
   PASTOR
   SECRETARIO
   TESORERO
   COORDINADOR
+}
+
+enum TipoIglesia {
+  CATEDRAL
+  BASILICA
+  PARROQUIA
+  TEMPLO
+  CAPILLA
+  SANTUARIO
 }
 
 enum TipoEvento {
@@ -69,6 +81,9 @@ model Usuario {
   // Nulo mientras el usuario no configura su contraseña desde la invitación (B1-14)
   passwordHash String?
   rol          Rol
+  // Iglesia a la que pertenece el personal. Nulo solo para la Coordinación (alcance nacional).
+  iglesiaId    String?
+  iglesia      Iglesia?  @relation(fields: [iglesiaId], references: [id])
   activo       Boolean   @default(true)
   ultimoAcceso DateTime?
   createdAt    DateTime  @default(now())
@@ -83,6 +98,7 @@ model Usuario {
   donacionesActualizadas Donacion[]              @relation("DonacionActualizador")
   anuncios               Anuncio[]
 
+  @@index([iglesiaId])
   @@map("usuarios")
 }
 
@@ -294,6 +310,25 @@ model Donacion {
   @@index([fecha])
   @@index([miembroId])
   @@map("donaciones")
+}
+
+// ───────────── Ecclesia · Iglesias ─────────────
+
+// Una fila por iglesia. Reemplaza a la fila única de ConfiguracionIglesia; la ficha completa
+// (dirección, INEGI, contacto, patrimonio) la amplía el módulo de iglesias.
+model Iglesia {
+  id          String      @id @default(uuid())
+  nombre      String
+  tipo        TipoIglesia
+  zonaHoraria String      @default("America/Mexico_City")
+  // Una iglesia cerrada conserva su historia pero no aparece en consultas públicas
+  activa      Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  usuarios Usuario[]
+
+  @@map("iglesias")
 }
 
 // ───────────── B1 · Configuración de la iglesia ─────────────

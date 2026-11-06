@@ -51,7 +51,7 @@ components:
   schemas:
     Rol:
       type: string
-      enum: [ADMIN, PASTOR, SECRETARIO, TESORERO, COORDINADOR]
+      enum: [COORDINACION, ADMIN_IGLESIA, PASTOR, SECRETARIO, TESORERO, COORDINADOR]
     Error:
       type: object
       properties:
@@ -600,7 +600,7 @@ paths:
   /usuarios:
     get:
       tags: [Usuarios]
-      summary: Listar usuarios (ADMIN)
+      summary: Listar usuarios (ADMIN_IGLESIA)
       parameters:
         - { $ref: '#/components/parameters/Page' }
         - { $ref: '#/components/parameters/Limit' }
@@ -626,7 +626,7 @@ paths:
         '403': { $ref: '#/components/responses/Prohibido' }
     post:
       tags: [Usuarios]
-      summary: Crear usuario (ADMIN). Sin password se envía invitación por correo (48 h).
+      summary: Crear usuario (ADMIN_IGLESIA). Sin password se envía invitación por correo (48 h).
       requestBody:
         required: true
         content:
@@ -663,7 +663,7 @@ paths:
   /usuarios/opciones:
     get:
       tags: [Usuarios]
-      summary: Usuarios activos para selectores (ADMIN, PASTOR)
+      summary: Usuarios activos para selectores (ADMIN_IGLESIA, PASTOR)
       parameters:
         - { name: rol, in: query, schema: { $ref: '#/components/schemas/Rol' } }
       responses:
@@ -697,7 +697,7 @@ paths:
     parameters: [{ $ref: '#/components/parameters/Id' }]
     get:
       tags: [Usuarios]
-      summary: Detalle de usuario (ADMIN)
+      summary: Detalle de usuario (ADMIN_IGLESIA)
       responses:
         '200':
           {
@@ -717,7 +717,7 @@ paths:
         '404': { $ref: '#/components/responses/NoEncontrado' }
     patch:
       tags: [Usuarios]
-      summary: Editar nombre, correo o rol (ADMIN)
+      summary: Editar nombre, correo o rol (ADMIN_IGLESIA)
       requestBody:
         required: true
         content:
@@ -758,7 +758,7 @@ paths:
     parameters: [{ $ref: '#/components/parameters/Id' }]
     patch:
       tags: [Usuarios]
-      summary: Activar o desactivar (ADMIN). Desactivar revoca sus sesiones.
+      summary: Activar o desactivar (ADMIN_IGLESIA). Desactivar revoca sus sesiones.
       requestBody:
         required: true
         content:
@@ -790,7 +790,7 @@ paths:
     parameters: [{ $ref: '#/components/parameters/Id' }]
     post:
       tags: [Usuarios]
-      summary: Reenvía el correo para configurar contraseña (ADMIN)
+      summary: Reenvía el correo para configurar contraseña (ADMIN_IGLESIA)
       responses:
         '204': { $ref: '#/components/responses/SinContenido' }
         '422': { $ref: '#/components/responses/ReglaNegocio' }
@@ -818,7 +818,7 @@ paths:
           }
     put:
       tags: [Configuración]
-      summary: Actualizar datos de la iglesia (ADMIN)
+      summary: Actualizar datos de la iglesia (ADMIN_IGLESIA)
       requestBody:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/Configuracion' } } }
@@ -843,7 +843,7 @@ paths:
   /configuracion/logo:
     post:
       tags: [Configuración]
-      summary: Subir logotipo (ADMIN). PNG, JPG, WEBP o SVG ≤ 2 MB.
+      summary: Subir logotipo (ADMIN_IGLESIA). PNG, JPG, WEBP o SVG ≤ 2 MB.
       requestBody:
         required: true
         content:
@@ -897,7 +897,7 @@ paths:
           }
     post:
       tags: [Configuración]
-      summary: Agregar horario (ADMIN)
+      summary: Agregar horario (ADMIN_IGLESIA)
       requestBody:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/Horario' } } }
@@ -908,7 +908,7 @@ paths:
     parameters: [{ $ref: '#/components/parameters/Id' }]
     patch:
       tags: [Configuración]
-      summary: Editar horario (ADMIN)
+      summary: Editar horario (ADMIN_IGLESIA)
       requestBody:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/Horario' } } }
@@ -918,7 +918,7 @@ paths:
         '404': { $ref: '#/components/responses/NoEncontrado' }
     delete:
       tags: [Configuración]
-      summary: Eliminar horario (ADMIN)
+      summary: Eliminar horario (ADMIN_IGLESIA)
       responses:
         '204': { $ref: '#/components/responses/SinContenido' }
         '404': { $ref: '#/components/responses/NoEncontrado' }
@@ -1046,7 +1046,7 @@ paths:
                   meta: { $ref: '#/components/schemas/Meta' }
     post:
       tags: [Ministerios]
-      summary: Crear (ADMIN, PASTOR); nombre único sin distinguir mayúsculas
+      summary: Crear (ADMIN_IGLESIA, PASTOR); nombre único sin distinguir mayúsculas
       requestBody:
         required: true
         content:
@@ -1069,7 +1069,7 @@ paths:
         '404': { $ref: '#/components/responses/NoEncontrado' }
     patch:
       tags: [Ministerios]
-      summary: Editar nombre / descripción (ADMIN, PASTOR)
+      summary: Editar nombre / descripción (ADMIN_IGLESIA, PASTOR)
       responses:
         '200': { description: OK }
         '409': { $ref: '#/components/responses/Conflicto' }
@@ -1077,7 +1077,7 @@ paths:
     parameters: [{ $ref: '#/components/parameters/Id' }]
     patch:
       tags: [Ministerios]
-      summary: Desactivar / reactivar (ADMIN, PASTOR)
+      summary: Desactivar / reactivar (ADMIN_IGLESIA, PASTOR)
       requestBody:
         required: true
         content:
@@ -1089,7 +1089,7 @@ paths:
     parameters: [{ $ref: '#/components/parameters/Id' }]
     put:
       tags: [Ministerios]
-      summary: Reemplazar coordinadores (ADMIN, PASTOR)
+      summary: Reemplazar coordinadores (ADMIN_IGLESIA, PASTOR)
       description: Solo usuarios activos con rol COORDINADOR o PASTOR. Lista vacía permitida.
       requestBody:
         required: true
@@ -1124,7 +1124,7 @@ paths:
                   meta: { $ref: '#/components/schemas/Meta' }
     post:
       tags: [Ministerios]
-      summary: Vincular miembros (ADMIN, PASTOR o COORDINADOR del ministerio)
+      summary: Vincular miembros (ADMIN_IGLESIA, PASTOR o COORDINADOR del ministerio)
       description: Reactiva vínculos previos; ids repetidos se ignoran; todo o nada.
       requestBody:
         required: true
@@ -1144,7 +1144,7 @@ paths:
       - { name: miembroId, in: path, required: true, schema: { type: string, format: uuid } }
     delete:
       tags: [Ministerios]
-      summary: Desvincular (soft, guarda fechaSalida); ADMIN, PASTOR o COORDINADOR del ministerio
+      summary: Desvincular (soft, guarda fechaSalida); ADMIN_IGLESIA, PASTOR o COORDINADOR del ministerio
       responses:
         '204': { $ref: '#/components/responses/SinContenido' }
         '403': { $ref: '#/components/responses/Prohibido' }
@@ -1493,7 +1493,7 @@ paths:
   /donaciones:
     get:
       tags: [Donaciones]
-      summary: Aportaciones paginadas por fecha desc (donaciones:leer — ADMIN, PASTOR, TESORERO)
+      summary: Aportaciones paginadas por fecha desc (donaciones:leer — ADMIN_IGLESIA, PASTOR, TESORERO)
       description: Excluye anuladas salvo incluirAnuladas=true. meta.totalMonto suma el filtro completo sin anuladas.
       parameters:
         - { $ref: '#/components/parameters/Page' }
@@ -1522,7 +1522,7 @@ paths:
         '403': { $ref: '#/components/responses/Prohibido' }
     post:
       tags: [Donaciones]
-      summary: Registrar aportación (donaciones:crear — ADMIN, TESORERO)
+      summary: Registrar aportación (donaciones:crear — ADMIN_IGLESIA, TESORERO)
       requestBody:
         required: true
         content:
@@ -1704,7 +1704,7 @@ paths:
   /reportes/ingresos:
     get:
       tags: [Reportes]
-      summary: Ingresos por periodo (reportes:ingresos — ADMIN, PASTOR, TESORERO)
+      summary: Ingresos por periodo (reportes:ingresos — ADMIN_IGLESIA, PASTOR, TESORERO)
       parameters:
         - { name: desde, in: query, schema: { type: string, format: date } }
         - { name: hasta, in: query, schema: { type: string, format: date } }
