@@ -374,7 +374,12 @@ describe('resumen del periodo (RF-64, RF-65, RN-45)', () => {
       promedio: '625.25',
     });
     expect(res.body.data.conMas).toEqual([
-      expect.objectContaining({ monto: '1000.10', inicio: '2026-11-08T18:00:00.000Z' }),
+      expect.objectContaining({
+        monto: '1000.10',
+        inicio: '2026-11-08T18:00:00.000Z',
+        fechaLocal: '2026-11-08',
+        horaLocal: '12:00',
+      }),
     ]);
     expect(res.body.data.conMenos).toEqual([
       expect.objectContaining({ monto: '250.40', inicio: '2026-11-10T00:00:00.000Z' }),
@@ -580,7 +585,9 @@ describe('listado de capturas (RF-64)', () => {
       '750.30',
       '500.20',
     ]);
-    expect(res.body.data[0]).toMatchObject({ padre: { nombre: 'Juan Gómez' } });
+    // La misa del domingo 18:00 local ya es lunes en UTC: se muestra con su hora local
+    expect(res.body.data[0]).toMatchObject({ padre: { nombre: 'Juan Gómez' }, horaLocal: '18:00' });
+    expect(res.body.data[2]).toMatchObject({ fechaLocal: '2026-11-08', horaLocal: '18:00' });
     const segunda = await api(tesorero.auth).get(
       `/iglesias/${iglesia.id}/diezmos?${PERIODO}&limit=3&page=2`,
     );

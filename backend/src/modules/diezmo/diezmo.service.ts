@@ -4,6 +4,7 @@
 import { Prisma } from '../../generated/prisma/client';
 import { AppError } from '../../lib/appError';
 import { type PeriodoReporte, resolverPeriodo } from '../../lib/dominio/periodo';
+import { fechaYHoraLocal } from '../../lib/dominio/zona';
 import { crearMeta, paginar } from '../../lib/paginacion';
 import { prisma } from '../../lib/prisma';
 import { type MotivoCaptura, evaluarCaptura, evaluarCorreccion } from './dominio/captura';
@@ -206,7 +207,7 @@ export async function corregir(
 
 /** RF-64: capturas del periodo, la más reciente primero. */
 export async function listar(iglesiaId: string, query: QueryListarDiezmos) {
-  const { periodo } = await periodoDe(iglesiaId, query);
+  const { zona, periodo } = await periodoDe(iglesiaId, query);
   const { page, limit, skip, take } = paginar(query);
   const where: Prisma.DiezmoWhereInput = {
     iglesiaId,
@@ -232,6 +233,8 @@ export async function listar(iglesiaId: string, query: QueryListarDiezmos) {
     id: f.id,
     misaId: f.misaId,
     inicio: f.misa.inicio,
+    fechaLocal: fechaYHoraLocal(f.misa.inicio, zona).fecha,
+    horaLocal: fechaYHoraLocal(f.misa.inicio, zona).hora,
     padre: f.misa.padre,
     monto: dinero(f.monto),
     actualizadoEn: f.updatedAt,
@@ -241,7 +244,7 @@ export async function listar(iglesiaId: string, query: QueryListarDiezmos) {
 
 /** RF-64, RF-65, RN-45: total, promedio por misa y misas con más y con menos diezmo. */
 export async function resumen(iglesiaId: string, query: QueryPeriodo) {
-  const { periodo } = await periodoDe(iglesiaId, query);
+  const { zona, periodo } = await periodoDe(iglesiaId, query);
   const rango = Prisma.sql`m."inicio" >= ${periodo.inicio} AND m."inicio" < ${periodo.finExcluido}`;
 
   const [fila] = await prisma.$queryRaw<
@@ -272,6 +275,8 @@ export async function resumen(iglesiaId: string, query: QueryPeriodo) {
   const aMisa = (d: { misaId: string; monto: Prisma.Decimal; misa: { inicio: Date } }) => ({
     misaId: d.misaId,
     inicio: d.misa.inicio,
+    fechaLocal: fechaYHoraLocal(d.misa.inicio, zona).fecha,
+    horaLocal: fechaYHoraLocal(d.misa.inicio, zona).hora,
     monto: dinero(d.monto),
   });
   const [conMas, conMenos] = await Promise.all([extremas('desc'), extremas('asc')]);

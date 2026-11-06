@@ -15,6 +15,7 @@ import { EventoDetallePage } from './features/eventos/evento-detalle.page';
 import { EventoFormPage } from './features/eventos/evento-form.page';
 import { EventosPage } from './features/eventos/eventos.page';
 import { DashboardPage } from './features/dashboard/dashboard.page';
+import { DiezmoPage } from './features/diezmo/diezmo.page';
 import { DonacionesPage } from './features/donaciones/donaciones.page';
 import { MiembroFormPage } from './features/miembros/miembro-form.page';
 import { MiembroPerfilPage } from './features/miembros/miembro-perfil.page';
@@ -162,6 +163,13 @@ export const routes: Routes = [
         component: DonacionesPage,
         data: { permiso: 'donaciones:leer' },
         title: 'Donaciones',
+      },
+      // Ecclesia: diezmo de las misas (solo personal de iglesia)
+      {
+        path: 'diezmo',
+        component: DiezmoPage,
+        data: { permiso: 'diezmo:leer' },
+        title: 'Diezmo',
       },
       {
         path: 'reportes',

@@ -54,7 +54,8 @@ export function aFechaApi(fecha: Date): string {
 // Cada dueño agrega las de su módulo (F2–F4) siguiendo el mismo patrón.
 
 export const ETIQUETAS_ROL: Record<Rol, string> = {
-  ADMIN: 'Administrador',
+  COORDINACION: 'Coordinación nacional',
+  ADMIN_IGLESIA: 'Administrador de iglesia',
   PASTOR: 'Pastor',
   SECRETARIO: 'Secretario',
   TESORERO: 'Tesorero',

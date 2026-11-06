@@ -158,6 +158,8 @@ describe('misas celebradas', () => {
     });
     const domingo = await api(admin.auth).get(`${url}?desde=2026-11-08&hasta=2026-11-08`);
     expect(domingo.body.meta.total).toBe(1);
+    // Se muestra con la fecha y la hora locales de la iglesia, no las de UTC
+    expect(domingo.body.data[0]).toMatchObject({ fechaLocal: '2026-11-08', horaLocal: '18:00' });
     const lunes = await api(admin.auth).get(`${url}?desde=2026-11-09&hasta=2026-11-09`);
     expect(lunes.body.meta.total).toBe(0);
     expect((await api(admin.auth).get(`${url}?desde=2026-11-09&hasta=2026-11-01`)).status).toBe(

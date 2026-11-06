@@ -3,6 +3,7 @@ import { AppError } from '../../lib/appError';
 import { crearMeta, paginar } from '../../lib/paginacion';
 import { prisma } from '../../lib/prisma';
 import { resolverPeriodo } from '../../lib/dominio/periodo';
+import { fechaYHoraLocal } from '../../lib/dominio/zona';
 import type { CrearMisa, CrearPadre, QueryListarMisas } from './misas.schemas';
 
 const SELECT_PADRE = { id: true, nombre: true } as const;
@@ -29,20 +30,27 @@ async function zonaDe(iglesiaId: string) {
   return iglesia.zonaHoraria;
 }
 
-const aMisa = (m: {
-  id: string;
-  inicio: Date;
-  padre: { id: string; nombre: string };
-  diezmo: { monto: { toFixed(d: number): string }; updatedAt: Date } | null;
-}) => ({
+const aMisa = (
+  zona: string,
+  m: {
+    id: string;
+    inicio: Date;
+    padre: { id: string; nombre: string };
+    diezmo: { monto: { toFixed(d: number): string }; updatedAt: Date } | null;
+  },
+) => ({
   id: m.id,
   inicio: m.inicio,
+  // Fecha y hora en la zona horaria de la iglesia: así se muestran (RN-31)
+  fechaLocal: fechaYHoraLocal(m.inicio, zona).fecha,
+  horaLocal: fechaYHoraLocal(m.inicio, zona).hora,
   padre: m.padre,
   diezmo: m.diezmo ? { monto: m.diezmo.monto.toFixed(2), actualizadoEn: m.diezmo.updatedAt } : null,
 });
 
 /** Registra una misa ya celebrada: un día, una hora y el padre que la ofició (RN-29, RF-48). */
 export async function registrarMisa(iglesiaId: string, datos: CrearMisa) {
+  const zona = await zonaDe(iglesiaId);
   const inicio = new Date(datos.inicio);
   if (inicio.getTime() > Date.now()) {
     throw AppError.reglaNegocio('Solo se registran misas que ya se celebraron.');
@@ -61,7 +69,7 @@ export async function registrarMisa(iglesiaId: string, datos: CrearMisa) {
     data: { iglesiaId, inicio, padreId: padre.id },
     select: { id: true, inicio: true, padre: { select: SELECT_PADRE }, diezmo: true },
   });
-  return aMisa(misa);
+  return aMisa(zona, misa);
 }
 
 /** Misas celebradas de la iglesia en un periodo (por omisión, el mes en curso), con su diezmo. */
@@ -94,5 +102,5 @@ export async function listarMisas(iglesiaId: string, query: QueryListarMisas) {
     }),
     prisma.misaCelebrada.count({ where }),
   ]);
-  return { datos: misas.map(aMisa), meta: crearMeta(total, page, limit) };
+  return { datos: misas.map((m) => aMisa(zona, m)), meta: crearMeta(total, page, limit) };
 }

@@ -5,6 +5,8 @@ export interface Usuario {
   nombre: string;
   email: string;
   rol: Rol;
+  /** Iglesia del personal; null solo para la Coordinación (alcance nacional) */
+  iglesiaId: string | null;
   activo: boolean;
   ultimoAcceso: string | null;
   createdAt: string;

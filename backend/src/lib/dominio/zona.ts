@@ -33,6 +33,16 @@ export function partesLocales(instante: Date, zonaHoraria: string): PartesLocale
   };
 }
 
+/** Fecha «yyyy-MM-dd» y hora «HH:mm» de un instante en la zona horaria (para mostrarlos tal cual). */
+export function fechaYHoraLocal(
+  instante: Date,
+  zonaHoraria: string,
+): { fecha: string; hora: string } {
+  const p = partesLocales(instante, zonaHoraria);
+  const dos = (n: number) => String(n).padStart(2, '0');
+  return { fecha: `${p.anio}-${dos(p.mes)}-${dos(p.dia)}`, hora: `${p.hora}:${p.minuto}` };
+}
+
 /** Milisegundos que la hora local de la zona se adelanta (o atrasa, si es negativo) respecto a UTC. */
 export function desfaseDeZona(instanteMs: number, zonaHoraria: string): number {
   const p = partesLocales(new Date(instanteMs), zonaHoraria);
