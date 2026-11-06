@@ -22,7 +22,7 @@ export async function crearIglesia(
 
 /**
  * Crea un usuario en la BD de pruebas. El personal de iglesia queda en la iglesia indicada en
- * `iglesiaId`, o en una nueva si no se indica; la Coordinación (nacional) no tiene iglesia.
+ * `iglesiaId`, o en la primera de la prueba (se crea si no hay) si no se indica; la Coordinación (nacional) no tiene iglesia.
  */
 export async function crearUsuario(
   rol: RolUsuario,
@@ -40,7 +40,10 @@ export async function crearUsuario(
       ? datos.iglesiaId
       : rol === 'COORDINACION'
         ? null
-        : (await crearIglesia()).id;
+        : (
+            (await prisma.iglesia.findFirst({ orderBy: { createdAt: 'asc' } })) ??
+            (await crearIglesia())
+          ).id;
   return prisma.usuario.create({
     data: {
       rol,

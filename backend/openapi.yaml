@@ -670,6 +670,12 @@ paths:
                   email: { type: string },
                   rol: { $ref: '#/components/schemas/Rol' },
                   password: { type: string },
+                  iglesiaId:
+                    {
+                      type: string,
+                      format: uuid,
+                      description: Solo la Coordinación la indica (el administrador crea en su iglesia; los usuarios de la Coordinación no tienen),
+                    },
                 }
       responses:
         '201':

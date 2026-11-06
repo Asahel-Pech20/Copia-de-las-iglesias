@@ -151,7 +151,9 @@ describe('PATCH /usuarios/:id y /estado (B1-13)', () => {
   it('no se puede quitar el rol ADMIN_IGLESIA al último administrador activo → 422', async () => {
     const res = await api().patch(`/usuarios/${admin.usuario.id}`, { rol: 'PASTOR' });
     expect(res.status).toBe(422);
-    expect(res.body.error.message).toBe('Debe existir al menos un administrador activo.');
+    expect(res.body.error.message).toBe(
+      'Debe existir al menos un administrador activo en la iglesia.',
+    );
   });
 
   it('no se puede desactivar al último administrador activo → 422', async () => {

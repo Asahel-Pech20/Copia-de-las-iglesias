@@ -151,10 +151,7 @@ export async function cambiarEstado(id: string, activo: boolean) {
 
 /** Usuario por id o null si no existe: esos datos son de B1 y se piden a su service. */
 function usuarioONulo(id: string) {
-  return usuariosService.obtener(id).catch((error: unknown) => {
-    if (error instanceof AppError && error.code === 'NOT_FOUND') return null;
-    throw error;
-  });
+  return usuariosService.buscarPorId(id);
 }
 
 /** Reemplaza la lista. Solo usuarios activos con rol COORDINADOR o PASTOR (si no, 422 indicando cuál). */
