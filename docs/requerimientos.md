@@ -2,6 +2,7 @@
 
 > **Cliente:** Coordinación Nacional de Templos (caso del 30 de octubre de 2026). **Fase 1:** análisis del caso y arnés.
 > **Equipo:** Santiago Asahel Pech Ake · Nataly Marisol Santos Miam · Genaro Aurelio Antonio Pacheco · Oscar Michel Matos May (líder).
+> **Caso del cliente (fuente de todas las citas):** [Proyecto_Ecclesia_Sistema_Nacional_de_Gestion_de_Iglesias.docx](ecclesia/Proyecto_Ecclesia_Sistema_Nacional_de_Gestion_de_Iglesias.docx).
 > **Herramienta de IA:** Claude Code (una sola en todo el proyecto). Arnés: carpeta [`arnes-ia/`](../arnes-ia/README.md).
 
 ## Cómo se llena este documento (léelo antes de escribir)
